@@ -1,0 +1,95 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --surface: 222 45% 98%;
+  --surface-elevated: 0 0% 100%;
+  --accent-from: 224 90% 62%;
+  --accent-to: 270 86% 64%;
+  --vote-up: 20 95% 60%;
+  --vote-down: 210 95% 66%;
+}
+
+[data-accent="default"] {
+  --accent-from: 224 90% 62%;
+  --accent-to: 270 86% 64%;
+  --vote-up: 20 95% 60%;
+  --vote-down: 210 95% 66%;
+}
+
+[data-accent="ocean"] {
+  --accent-from: 198 90% 56%;
+  --accent-to: 224 82% 62%;
+  --vote-up: 22 96% 60%;
+  --vote-down: 201 95% 64%;
+}
+
+[data-accent="emerald"] {
+  --accent-from: 160 84% 40%;
+  --accent-to: 186 86% 45%;
+  --vote-up: 18 96% 58%;
+  --vote-down: 195 90% 62%;
+}
+
+.dark {
+  --surface: 222 28% 12%;
+  --surface-elevated: 223 32% 15%;
+  --accent-from: 220 90% 62%;
+  --accent-to: 270 92% 68%;
+  --vote-up: 18 98% 62%;
+  --vote-down: 210 95% 68%;
+}
+
+* {
+  @apply border-white/10;
+}
+
+html,
+body {
+  @apply min-h-full bg-[#05070f] text-white antialiased;
+}
+
+body {
+  @apply selection:bg-accent-from/40 selection:text-white;
+}
+
+a,
+button,
+input,
+textarea {
+  @apply smooth-fade;
+}
+
+.mesh-bg {
+  background-color: #05070f;
+  background-image:
+    radial-gradient(at 40% 20%, rgba(123, 97, 255, 0.25) 0px, transparent 50%),
+    radial-gradient(at 80% 0%, rgba(49, 130, 246, 0.2) 0px, transparent 50%),
+    radial-gradient(at 0% 70%, rgba(16, 185, 129, 0.16) 0px, transparent 55%);
+}
+
+.interactive-surface {
+  @apply transition-all duration-200 ease-out hover:translate-y-[-2px] hover:shadow-soft active:translate-y-0 active:scale-[0.995];
+}
+
+.glass-surface {
+  @apply rounded-3xl border border-white/15 bg-white/10 shadow-glass backdrop-blur-2xl;
+}
+
+.glass-surface-strong {
+  @apply rounded-3xl border border-white/20 bg-white/[0.14] shadow-soft backdrop-blur-2xl;
+}
+
+.smooth-fade {
+  @apply transition-all duration-200 ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

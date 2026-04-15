@@ -1,9 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { ProductDeal } from "@/types/domain";
 import { useDealsStore } from "@/store/deals-store";
+
+/** Ms between Supabase refreshes so scraped rows appear without manual reload. 0 = off. */
+function pollIntervalMs(): number {
+  const raw = process.env.NEXT_PUBLIC_PRODUCTS_POLL_MS;
+  if (raw === "0") return 0;
+  const n = Number.parseInt(raw ?? "", 10);
+  if (Number.isFinite(n) && n >= 0) return n;
+  return 60_000;
+}
 
 interface SupabaseProduct {
   id: string;
@@ -66,13 +75,17 @@ function toProductDeal(p: SupabaseProduct): ProductDeal {
 export function useSupabaseProducts() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [lastFetchedAt, setLastFetchedAt] = useState<string | null>(null);
   const setDeals = useDealsStore((state) => state.setDeals);
   const currentDeals = useDealsStore((state) => state.deals);
+  const firstLoadRef = useRef(true);
 
   useEffect(() => {
     let cancelled = false;
 
     async function fetchProducts() {
+      const showSkeleton = firstLoadRef.current;
+      if (showSkeleton) setLoading(true);
       try {
         const { data, error: fetchError } = await supabase
           .from("products")
@@ -83,23 +96,49 @@ export function useSupabaseProducts() {
         if (fetchError) throw fetchError;
         if (cancelled) return;
 
-        if (data && data.length > 0) {
-          const deals = (data as SupabaseProduct[]).map(toProductDeal);
-          setDeals(deals);
+        const rows = data ?? [];
+        const deals = (rows as SupabaseProduct[]).map(toProductDeal);
+        setDeals(deals);
+        if (!cancelled) {
+          setError(null);
+          setLastFetchedAt(new Date().toISOString());
         }
       } catch (e) {
         if (!cancelled) {
           setError(e instanceof Error ? e.message : "Failed to fetch products");
-          console.warn("Supabase fetch failed, using mock data:", e);
+          console.warn("Supabase products fetch failed:", e);
         }
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) {
+          if (firstLoadRef.current) {
+            setLoading(false);
+            firstLoadRef.current = false;
+          }
+        }
       }
     }
 
-    fetchProducts();
-    return () => { cancelled = true; };
+    void fetchProducts();
+
+    const pollMs = pollIntervalMs();
+    const intervalId =
+      pollMs > 0
+        ? window.setInterval(() => {
+            if (!cancelled) void fetchProducts();
+          }, pollMs)
+        : undefined;
+
+    const onVisible = () => {
+      if (document.visibilityState === "visible" && !cancelled) void fetchProducts();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+
+    return () => {
+      cancelled = true;
+      if (intervalId !== undefined) window.clearInterval(intervalId);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
   }, [setDeals]);
 
-  return { loading, error, productsCount: currentDeals.length };
+  return { loading, error, productsCount: currentDeals.length, lastFetchedAt };
 }

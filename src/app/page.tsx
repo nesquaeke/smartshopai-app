@@ -5,9 +5,12 @@ import { HomeFeed } from "@/components/feed/home-feed";
 import { Footer } from "@/components/layout/footer";
 import { Navbar } from "@/components/layout/navbar";
 import { useSupabaseProducts } from "@/hooks/use-supabase-products";
+import { t } from "@/lib/i18n";
+import { useUiStore } from "@/store/ui-store";
 
 export default function Home() {
-  const { loading } = useSupabaseProducts();
+  const { loading, error, productsCount, lastFetchedAt } = useSupabaseProducts();
+  const locale = useUiStore((s) => s.locale);
 
   return (
     <main className="relative min-h-screen overflow-x-hidden px-2 pb-10 pt-4 sm:px-4">
@@ -17,6 +20,24 @@ export default function Home() {
       <Navbar />
       <div className="mx-auto w-[min(1200px,calc(100%-0.5rem))]">
         <HomeAds />
+        {error ? (
+          <p className="mt-6 rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-center text-sm text-red-100">
+            {t(locale, "feedLoadError")}
+            <span className="mt-1 block font-mono text-xs text-red-200/80">{error}</span>
+          </p>
+        ) : null}
+        {!loading && !error ? (
+          <p className="mt-2 text-center text-[11px] text-white/45">
+            {t(locale, "feedAutoRefresh")}
+            {lastFetchedAt ? (
+              <>
+                {" · "}
+                {t(locale, "feedLastSync")}: {new Date(lastFetchedAt).toLocaleString(locale === "tr" ? "tr-TR" : "en-GB")} · {productsCount}{" "}
+                {t(locale, "feedProductsCount")}
+              </>
+            ) : null}
+          </p>
+        ) : null}
         {loading ? (
           <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
             {Array.from({ length: 8 }).map((_, i) => (

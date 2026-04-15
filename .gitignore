@@ -28,6 +28,8 @@ scraper/__pycache__/
 scraper/.venv/
 scraper/*.pyc
 scraper/.env
+scraper/continuous_scrape.log
+scraper/continuous_scrape.pid
 
 # typescript
 *.tsbuildinfo

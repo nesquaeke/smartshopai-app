@@ -7,8 +7,8 @@ ceneo_scraper / allegro_scraper (set SCRAPE_RUN_ALL=1 each cycle for full catego
 
 Env:
   SCRAPE_RUN_ALL=1          (set by this script each iteration)
-  SCRAPE_LOOP_SLEEP_SEC     seconds between successful full runs (default 900 = 15 min)
-  SCRAPE_LOOP_MAX_FAILS     exit after N consecutive errors (default 12)
+  SCRAPE_LOOP_SLEEP_SEC     seconds between successful full runs (default 120 = 2 min)
+  SCRAPE_LOOP_MAX_FAILS     exit after N consecutive errors (default 999999 ≈ never)
   SCRAPE_LOOP_JITTER_SEC    random 0..N added to sleep (default 120) to avoid wall-clock sync
 
 Requires scraper/.env with SUPABASE_URL and SUPABASE_KEY (same as other scrapers).
@@ -36,8 +36,8 @@ def main() -> None:
     signal.signal(signal.SIGINT, _handle_sigint)
     signal.signal(signal.SIGTERM, _handle_sigint)
 
-    sleep_ok = int(os.getenv("SCRAPE_LOOP_SLEEP_SEC", "900"))
-    max_fails = int(os.getenv("SCRAPE_LOOP_MAX_FAILS", "12"))
+    sleep_ok = int(os.getenv("SCRAPE_LOOP_SLEEP_SEC", "120"))
+    max_fails = int(os.getenv("SCRAPE_LOOP_MAX_FAILS", "999999"))
     jitter = int(os.getenv("SCRAPE_LOOP_JITTER_SEC", "120"))
 
     os.environ["SCRAPE_RUN_ALL"] = "1"

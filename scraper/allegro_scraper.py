@@ -13,13 +13,13 @@ if dotenv_path.exists():
         if "=" in line and not line.startswith("#"):
             k, v = line.split("=", 1)
             os.environ.setdefault(k.strip(), v.strip())
-import hashlib
 from datetime import datetime, timezone
 
 from scrapling.fetchers import StealthyFetcher
 from supabase import create_client
 
 from allegro_category_urls import ALLEGRO_EXTRA_CATEGORIES
+from product_slug import make_row_slug
 from scrape_slot import categories_for_this_run, env_int, time_slots_count, current_slot_index
 
 SUPABASE_URL = os.getenv("SUPABASE_URL", "")
@@ -62,12 +62,6 @@ def _allegro_product_blurb(title: str, path: list[str]) -> str:
     tail = " › ".join(path[-2:]) if len(path) >= 2 else (path[0] if path else "Allegro")
     return (f"{title[:160]} — {tail}. Oferta z Allegro.pl.")[:900]
 
-
-def make_slug(title: str) -> str:
-    slug = re.sub(r"[^a-z0-9]+", "-", title.lower().strip())
-    slug = slug.strip("-")[:80]
-    short_hash = hashlib.md5(title.encode()).hexdigest()[:6]
-    return f"{slug}-{short_hash}"
 
 def parse_price(text: str) -> float | None:
     if not text:
@@ -120,7 +114,7 @@ def _parse_allegro_listing_nodes(items: list, cat_info: dict, cap: int) -> list[
 
             products.append({
                 "title": title[:200],
-                "slug": make_slug(title),
+                "slug": make_row_slug(title, product_url),
                 "image_url": img_url,
                 "store_name": "Allegro",
                 "store_logos": ["Allegro"],

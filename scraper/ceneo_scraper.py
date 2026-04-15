@@ -13,13 +13,13 @@ if dotenv_path.exists():
         if "=" in line and not line.startswith("#"):
             k, v = line.split("=", 1)
             os.environ.setdefault(k.strip(), v.strip())
-import hashlib
 from datetime import datetime, timezone
 
 from scrapling.fetchers import StealthyFetcher
 from supabase import create_client
 
 from ceneo_category_urls import CENEO_EXTRA_CATEGORIES
+from product_slug import make_row_slug
 from scrape_slot import categories_for_this_run, env_int, time_slots_count, current_slot_index
 
 SUPABASE_URL = os.getenv("SUPABASE_URL", "")
@@ -97,12 +97,6 @@ def _ceneo_product_blurb(title: str, path: list[str]) -> str:
     tail = " › ".join(path[-2:]) if len(path) >= 2 else (path[0] if path else "Ceneo")
     text = f"{title[:160]} — {tail}. Porównanie cen na Ceneo.pl."
     return text[:900]
-
-def make_slug(title: str) -> str:
-    slug = re.sub(r"[^a-z0-9]+", "-", title.lower().strip())
-    slug = slug.strip("-")[:80]
-    short_hash = hashlib.md5(title.encode()).hexdigest()[:6]
-    return f"{slug}-{short_hash}"
 
 def fix_image_url(url: str) -> str:
     """Convert small thumbnail to large product image."""
@@ -212,7 +206,7 @@ def scrape_category_listing(cat_info: dict) -> list[dict]:
     products = []
     seen_slugs = set()
     for item in all_items[:max_items]:
-        slug = make_slug(item["title"])
+        slug = make_row_slug(item["title"], item["product_url"])
         if slug in seen_slugs:
             continue
         seen_slugs.add(slug)

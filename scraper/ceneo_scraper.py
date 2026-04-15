@@ -32,10 +32,10 @@ sb = create_client(SUPABASE_URL, SUPABASE_KEY)
 def ceneo_limits() -> dict:
     """Tune via env for larger runs (e.g. GitHub hourly job)."""
     return {
-        "items": env_int("CENEO_MAX_ITEMS", 140, minimum=5, maximum=10000),
-        "pages": env_int("CENEO_MAX_PAGES", 10, minimum=1, maximum=600),
-        "offers_per_product": env_int("CENEO_MAX_OFFERS_PER_PRODUCT", 45, minimum=1, maximum=500),
-        "offer_products": env_int("CENEO_OFFER_PRODUCTS", 18, minimum=0, maximum=500),
+        "items": env_int("CENEO_MAX_ITEMS", 180, minimum=5, maximum=12000),
+        "pages": env_int("CENEO_MAX_PAGES", 12, minimum=1, maximum=700),
+        "offers_per_product": env_int("CENEO_MAX_OFFERS_PER_PRODUCT", 55, minimum=1, maximum=500),
+        "offer_products": env_int("CENEO_OFFER_PRODUCTS", 22, minimum=0, maximum=500),
     }
 
 CENEO_CATEGORIES = [

@@ -31,9 +31,9 @@ sb = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 def allegro_limits() -> dict:
     return {
-        "max_pages": env_int("ALLEGRO_MAX_PAGES", 10, minimum=1, maximum=250),
-        "max_items_total": env_int("ALLEGRO_MAX_ITEMS", 200, minimum=5, maximum=25000),
-        "max_items_per_page": env_int("ALLEGRO_MAX_ITEMS_PER_PAGE", 90, minimum=5, maximum=120),
+        "max_pages": env_int("ALLEGRO_MAX_PAGES", 12, minimum=1, maximum=280),
+        "max_items_total": env_int("ALLEGRO_MAX_ITEMS", 280, minimum=5, maximum=30000),
+        "max_items_per_page": env_int("ALLEGRO_MAX_ITEMS_PER_PAGE", 96, minimum=5, maximum=120),
         "page_sleep": env_int("ALLEGRO_PAGE_SLEEP", 2, minimum=1, maximum=30),
     }
 

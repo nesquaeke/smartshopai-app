@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { BuildVersionPill } from "@/components/layout/build-version-pill";
 import { Providers } from "@/components/providers";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -31,6 +32,7 @@ export default function RootLayout({
         <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-xl focus:bg-white/20 focus:px-4 focus:py-2 focus:text-white focus:backdrop-blur-xl">
           Skip to content
         </a>
+        <BuildVersionPill />
         <Providers>{children}</Providers>
       </body>
     </html>

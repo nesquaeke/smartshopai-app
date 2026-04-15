@@ -5,7 +5,7 @@ import { create } from "zustand";
 export interface Toast {
   id: string;
   message: string;
-  type?: "success" | "info" | "warning";
+  type?: "success" | "info" | "warning" | "error";
 }
 
 interface ToastStore {

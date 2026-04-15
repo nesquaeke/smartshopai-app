@@ -17,6 +17,7 @@ export const products: ProductDeal[] = [
     postedAt: "2026-03-18T09:20:00.000Z",
     dealType: "online",
     categoryPath: ["Electronics", "Phones", "Android", "Samsung"],
+    categoryId: "samsung",
     postedBy: {
       username: "dealhunter_oz",
       rank: "Gold Scout",
@@ -39,6 +40,7 @@ export const products: ProductDeal[] = [
     postedAt: "2026-03-20T05:40:00.000Z",
     dealType: "online",
     categoryPath: ["Electronics", "Audio"],
+    categoryId: "headphones",
     postedBy: {
       username: "pulsefindr",
       rank: "Silver Ranger",
@@ -62,6 +64,7 @@ export const products: ProductDeal[] = [
     dealType: "local",
     city: "Istanbul",
     categoryPath: ["Home", "Kitchen"],
+    categoryId: "kitchen",
     postedBy: {
       username: "locallegend",
       rank: "City Hero",
@@ -84,6 +87,7 @@ export const products: ProductDeal[] = [
     postedAt: "2026-03-17T11:05:00.000Z",
     dealType: "online",
     categoryPath: ["Electronics", "Laptops", "Gaming"],
+    categoryId: "gaming-laptops",
     postedBy: {
       username: "fps_deals",
       rank: "Core Member",
@@ -106,6 +110,7 @@ export const products: ProductDeal[] = [
     postedAt: "2026-03-20T03:15:00.000Z",
     dealType: "online",
     categoryPath: ["Fashion", "Sneakers"],
+    categoryId: "sneakers",
     postedBy: {
       username: "stylefinder",
       rank: "Trend Spotter",
@@ -129,6 +134,7 @@ export const products: ProductDeal[] = [
     dealType: "local",
     city: "Ankara",
     categoryPath: ["Home", "Cleaning"],
+    categoryId: "cleaning",
     postedBy: {
       username: "dealpilot",
       rank: "Verified Contributor",
@@ -151,6 +157,7 @@ export const products: ProductDeal[] = [
     postedAt: "2026-03-19T09:12:00.000Z",
     dealType: "online",
     categoryPath: ["Electronics", "Phones", "iOS"],
+    categoryId: "ios",
     postedBy: {
       username: "applewatcher",
       rank: "Gold Scout",
@@ -173,6 +180,7 @@ export const products: ProductDeal[] = [
     postedAt: "2026-03-20T07:30:00.000Z",
     dealType: "online",
     categoryPath: ["Electronics", "Phones", "Android", "Xiaomi"],
+    categoryId: "xiaomi",
     postedBy: {
       username: "dealmancer",
       rank: "Silver Ranger",
@@ -195,6 +203,7 @@ export const products: ProductDeal[] = [
     postedAt: "2026-03-18T08:05:00.000Z",
     dealType: "online",
     categoryPath: ["Electronics", "Laptops", "Ultrabooks"],
+    categoryId: "ultrabooks",
     postedBy: {
       username: "ultralight",
       rank: "Core Member",
@@ -217,6 +226,7 @@ export const products: ProductDeal[] = [
     postedAt: "2026-03-20T09:15:00.000Z",
     dealType: "online",
     categoryPath: ["Gaming", "Consoles"],
+    categoryId: "consoles",
     postedBy: {
       username: "fps_deals",
       rank: "Core Member",
@@ -240,6 +250,7 @@ export const products: ProductDeal[] = [
     dealType: "local",
     city: "Izmir",
     categoryPath: ["Gaming", "Consoles"],
+    categoryId: "consoles",
     postedBy: {
       username: "switchhunter",
       rank: "Trend Spotter",
@@ -262,6 +273,7 @@ export const products: ProductDeal[] = [
     postedAt: "2026-03-19T13:10:00.000Z",
     dealType: "online",
     categoryPath: ["Audio", "Speakers"],
+    categoryId: "speakers",
     postedBy: {
       username: "soundpilot",
       rank: "Verified Contributor",
@@ -284,6 +296,7 @@ export const products: ProductDeal[] = [
     postedAt: "2026-03-18T14:26:00.000Z",
     dealType: "online",
     categoryPath: ["Audio", "Headphones"],
+    categoryId: "headphones",
     postedBy: {
       username: "budslover",
       rank: "Core Member",
@@ -307,6 +320,7 @@ export const products: ProductDeal[] = [
     dealType: "local",
     city: "Bursa",
     categoryPath: ["Fashion", "Sneakers"],
+    categoryId: "sneakers",
     postedBy: {
       username: "stylefinder",
       rank: "Trend Spotter",
@@ -329,6 +343,7 @@ export const products: ProductDeal[] = [
     postedAt: "2026-03-19T21:48:00.000Z",
     dealType: "online",
     categoryPath: ["Fashion", "Accessories"],
+    categoryId: "accessories",
     postedBy: {
       username: "bagmaster",
       rank: "Rookie",
@@ -352,6 +367,7 @@ export const products: ProductDeal[] = [
     dealType: "local",
     city: "Istanbul",
     categoryPath: ["Home", "Cleaning"],
+    categoryId: "cleaning",
     postedBy: {
       username: "dealpilot",
       rank: "Verified Contributor",

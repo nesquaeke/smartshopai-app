@@ -48,8 +48,7 @@ export default function DealDetailPage() {
           .from("products")
           .select("*")
           .eq("slug", slug)
-          .limit(1)
-          .single();
+          .maybeSingle();
 
         if (error || !data) {
           setNotFoundState(true);
@@ -74,6 +73,7 @@ export default function DealDetailPage() {
           dealType: (data.deal_type as "online" | "local") || "online",
           city: data.city ?? undefined,
           categoryPath: data.category_path || [],
+          categoryId: data.category_id ?? undefined,
           description: data.description ?? undefined,
           postedBy: {
             username: data.posted_by_username || "SmartShopAI",

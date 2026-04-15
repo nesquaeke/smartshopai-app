@@ -7,12 +7,12 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { useSupabaseVotes } from "@/hooks/use-supabase-votes";
 import { t } from "@/lib/i18n";
-import { useDealsStore } from "@/store/deals-store";
+import { useToastStore } from "@/store/toast-store";
 import { useUiStore } from "@/store/ui-store";
 import { useUserStore } from "@/store/user-store";
 import { ProductDeal } from "@/types/domain";
-import { useSupabaseVotes } from "@/hooks/use-supabase-votes";
 import { cn } from "@/lib/utils";
 
 type CardSize = "lg" | "md" | "sm";
@@ -25,12 +25,11 @@ interface ProductCardProps {
 const cardClasses: Record<CardSize, string> = {
   lg: "xl:col-span-2 xl:row-span-2 min-h-[27rem]",
   md: "md:col-span-2 xl:col-span-1 min-h-[21rem]",
-  sm: "min-h-[20rem]"
+  sm: "min-h-[20rem]",
 };
 
 export function ProductCard({ deal, cardSize = "sm" }: ProductCardProps) {
   const shouldReduceMotion = useReducedMotion();
-  const { voteOnDeal, votes } = useDealsStore();
   const { vote: supabaseVote } = useSupabaseVotes();
   const locale = useUiStore((state) => state.locale);
   const savedDealIds = useUserStore((state) => state.savedDealIds);
@@ -38,12 +37,27 @@ export function ProductCard({ deal, cardSize = "sm" }: ProductCardProps) {
   const removeSavedDeal = useUserStore((state) => state.removeSavedDeal);
   const trackDealInteraction = useUserStore((state) => state.trackDealInteraction);
   const addPoints = useUserStore((state) => state.addPoints);
-  const vote = votes[deal.id] ?? { direction: null, scoreDelta: 0 };
-  const score = deal.upvotes - deal.downvotes + vote.scoreDelta;
+  const addToast = useToastStore((s) => s.addToast);
+  const score = deal.upvotes - deal.downvotes;
   const isSaved = savedDealIds.includes(deal.id);
 
   const formatPrice = (value: number) =>
     new Intl.NumberFormat("pl-PL").format(value);
+
+  const handleVote = async (direction: "up" | "down") => {
+    const result = await supabaseVote(deal.id, direction);
+    if (result === "error") {
+      addToast(
+        locale === "tr"
+          ? "Oy kaydedilemedi. Supabase SQL: migrations/002_vote_rpc_and_policies.sql çalıştır."
+          : "Vote not saved. Run migrations/002_vote_rpc_and_policies.sql in Supabase.",
+        "error"
+      );
+      return;
+    }
+    trackDealInteraction(deal, "vote");
+    if (direction === "up" && result !== "removed") addPoints(1);
+  };
 
   return (
     <motion.article
@@ -108,13 +122,8 @@ export function ProductCard({ deal, cardSize = "sm" }: ProductCardProps) {
             <Button
               size="icon"
               variant="ghost"
-              onClick={() => {
-                voteOnDeal(deal.id, "up");
-                supabaseVote(deal.id, "up");
-                trackDealInteraction(deal, "vote");
-                addPoints(2);
-              }}
-              className={cn("h-8 w-8 rounded-xl", vote.direction === "up" ? "bg-vote-up/25 text-vote-up" : "text-white/70")}
+              onClick={() => void handleVote("up")}
+              className="h-8 w-8 rounded-xl text-white/70 hover:text-vote-up"
               aria-label={`Upvote ${deal.title}`}
             >
               <ArrowBigUp className="h-5 w-5" />
@@ -130,15 +139,8 @@ export function ProductCard({ deal, cardSize = "sm" }: ProductCardProps) {
             <Button
               size="icon"
               variant="ghost"
-              onClick={() => {
-                voteOnDeal(deal.id, "down");
-                supabaseVote(deal.id, "down");
-                trackDealInteraction(deal, "vote");
-              }}
-              className={cn(
-                "h-8 w-8 rounded-xl",
-                vote.direction === "down" ? "bg-vote-down/25 text-vote-down" : "text-white/70"
-              )}
+              onClick={() => void handleVote("down")}
+              className="h-8 w-8 rounded-xl text-white/70 hover:text-vote-down"
               aria-label={`Downvote ${deal.title}`}
             >
               <ArrowBigDown className="h-5 w-5" />

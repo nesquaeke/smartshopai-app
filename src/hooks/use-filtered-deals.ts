@@ -7,18 +7,27 @@ import { rankDeals } from "@/lib/ranking";
 import { useDealsStore } from "@/store/deals-store";
 import { useFiltersStore } from "@/store/filters-store";
 import { useUserStore } from "@/store/user-store";
+import { useSupabaseCategories } from "@/hooks/use-supabase-categories";
 
 export function useFilteredDeals() {
   const deals = useDealsStore((state) => state.deals);
   const query = useFiltersStore((state) => state.query);
-  const selectedCategory = useFiltersStore((state) => state.selectedCategory);
+  const selectedCategoryId = useFiltersStore((state) => state.selectedCategoryId);
   const dealType = useFiltersStore((state) => state.dealType);
   const city = useFiltersStore((state) => state.city);
   const sortMode = useFiltersStore((state) => state.sortMode);
   const interactions = useUserStore((state) => state.interactions);
+  const { getSubtreeIdSet } = useSupabaseCategories();
 
   return useMemo(() => {
-    const filtered = filterDeals(deals, { query, selectedCategory, dealType, city });
+    const categorySubtreeIds = getSubtreeIdSet(selectedCategoryId);
+    const filtered = filterDeals(deals, {
+      query,
+      selectedCategoryId,
+      categorySubtreeIds,
+      dealType,
+      city,
+    });
     const personalized = withPersonalizationScore(filtered, interactions);
     const ranked = rankDeals(personalized);
 
@@ -29,5 +38,5 @@ export function useFilteredDeals() {
     }
 
     return ranked;
-  }, [deals, query, selectedCategory, dealType, city, sortMode, interactions]);
+  }, [deals, query, selectedCategoryId, dealType, city, sortMode, interactions, getSubtreeIdSet]);
 }

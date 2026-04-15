@@ -2,6 +2,7 @@
 
 import { useCallback } from "react";
 import { supabase } from "@/lib/supabase";
+import { useDealsStore } from "@/store/deals-store";
 
 function getFingerprint(): string {
   if (typeof window === "undefined") return "server";
@@ -14,48 +15,74 @@ function getFingerprint(): string {
   return Math.abs(hash).toString(36);
 }
 
+async function rpcAdjust(productId: string, direction: "up" | "down", delta: number) {
+  const { error } = await supabase.rpc("adjust_product_vote_count", {
+    p_product_id: productId,
+    p_direction: direction,
+    p_delta: delta,
+  });
+  if (error) {
+    console.error("adjust_product_vote_count failed:", error.message);
+    throw error;
+  }
+}
+
+async function refreshDealVotes(productId: string) {
+  const { data, error } = await supabase
+    .from("products")
+    .select("upvotes, downvotes")
+    .eq("id", productId)
+    .maybeSingle();
+  if (error || !data) return;
+  useDealsStore.getState().patchDeal(productId, {
+    upvotes: Number(data.upvotes) || 0,
+    downvotes: Number(data.downvotes) || 0,
+  });
+}
+
+export type VoteResult = "voted" | "removed" | "switched";
+
 export function useSupabaseVotes() {
-  const vote = useCallback(async (productId: string, direction: "up" | "down") => {
+  const vote = useCallback(async (productId: string, direction: "up" | "down"): Promise<VoteResult | "error"> => {
     const fingerprint = getFingerprint();
 
-    const { data: existing } = await supabase
-      .from("votes")
-      .select("id, direction")
-      .eq("product_id", productId)
-      .eq("user_fingerprint", fingerprint)
-      .limit(1)
-      .single();
+    try {
+      const { data: existing, error: selErr } = await supabase
+        .from("votes")
+        .select("id, direction")
+        .eq("product_id", productId)
+        .eq("user_fingerprint", fingerprint)
+        .maybeSingle();
 
-    if (existing) {
-      if (existing.direction === direction) {
-        await supabase.from("votes").delete().eq("id", existing.id);
-        await updateProductVoteCount(productId, direction, -1);
-        return "removed";
-      } else {
+      if (selErr) throw selErr;
+
+      if (existing) {
+        if (existing.direction === direction) {
+          await supabase.from("votes").delete().eq("id", existing.id);
+          await rpcAdjust(productId, direction, -1);
+          await refreshDealVotes(productId);
+          return "removed";
+        }
         await supabase.from("votes").update({ direction }).eq("id", existing.id);
-        await updateProductVoteCount(productId, existing.direction === "up" ? "up" : "down", -1);
-        await updateProductVoteCount(productId, direction, 1);
+        await rpcAdjust(productId, existing.direction as "up" | "down", -1);
+        await rpcAdjust(productId, direction, 1);
+        await refreshDealVotes(productId);
         return "switched";
       }
-    } else {
+
       await supabase.from("votes").insert({
         product_id: productId,
         user_fingerprint: fingerprint,
         direction,
       });
-      await updateProductVoteCount(productId, direction, 1);
+      await rpcAdjust(productId, direction, 1);
+      await refreshDealVotes(productId);
       return "voted";
+    } catch (e) {
+      console.error("Vote failed:", e);
+      return "error";
     }
   }, []);
 
   return { vote };
-}
-
-async function updateProductVoteCount(productId: string, direction: string, delta: number) {
-  const field = direction === "up" ? "upvotes" : "downvotes";
-  const { data } = await supabase.from("products").select(field).eq("id", productId).single();
-  if (data) {
-    const current = (data as Record<string, number>)[field] || 0;
-    await supabase.from("products").update({ [field]: Math.max(0, current + delta) }).eq("id", productId);
-  }
 }

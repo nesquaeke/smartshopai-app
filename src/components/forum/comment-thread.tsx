@@ -10,6 +10,7 @@ import { useSupabaseComments, SupabaseComment } from "@/hooks/use-supabase-comme
 import { t } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { useUiStore } from "@/store/ui-store";
+import { useUserStore } from "@/store/user-store";
 
 function CommentItem({
   comment,
@@ -93,9 +94,13 @@ interface CommentThreadProps {
 
 export function CommentThread({ productId }: CommentThreadProps) {
   const locale = useUiStore((state) => state.locale);
+  const isLoggedIn = useUserStore((state) => state.isLoggedIn);
+  const profileName = useUserStore((state) => state.profile.name);
   const { comments, loading, addComment } = useSupabaseComments(productId);
   const [newComment, setNewComment] = useState("");
   const [authorName, setAuthorName] = useState("");
+
+  const resolvedAuthor = isLoggedIn ? profileName : authorName.trim() || "Anonymous";
 
   return (
     <section className="rounded-3xl border border-white/15 bg-white/10 p-4 backdrop-blur-2xl">
@@ -105,16 +110,22 @@ export function CommentThread({ productId }: CommentThreadProps) {
         onSubmit={async (e) => {
           e.preventDefault();
           if (!newComment.trim()) return;
-          await addComment(newComment, authorName || "Anonymous");
+          await addComment(newComment, resolvedAuthor);
           setNewComment("");
         }}
       >
-        <Input
-          placeholder={locale === "tr" ? "Adınız" : "Your name"}
-          value={authorName}
-          onChange={(e) => setAuthorName(e.target.value)}
-          className="w-full sm:w-32"
-        />
+        {!isLoggedIn ? (
+          <Input
+            placeholder={locale === "tr" ? "Adınız" : "Your name"}
+            value={authorName}
+            onChange={(e) => setAuthorName(e.target.value)}
+            className="w-full sm:w-36"
+          />
+        ) : (
+          <p className="flex w-full items-center rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/75 sm:w-36">
+            {locale === "tr" ? "Hesap:" : "Signed in:"} <span className="ml-1 truncate font-medium text-white">{profileName}</span>
+          </p>
+        )}
         <Input
           placeholder={t(locale, "shareThoughts")}
           value={newComment}
@@ -138,7 +149,7 @@ export function CommentThread({ productId }: CommentThreadProps) {
             <CommentItem
               key={comment.id}
               comment={comment}
-              onReply={(content, parentId) => addComment(content, authorName || "Anonymous", parentId)}
+              onReply={(content, parentId) => addComment(content, resolvedAuthor, parentId)}
             />
           ))}
         </div>

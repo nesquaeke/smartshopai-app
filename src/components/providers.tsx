@@ -2,6 +2,7 @@
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactNode, useEffect, useLayoutEffect, useMemo, useState } from "react";
+import { AuthSessionBridge } from "@/components/auth-session-bridge";
 import { BackToTop } from "@/components/ui/back-to-top";
 import { ToastContainer } from "@/components/ui/toast";
 import { ThemeContext, ThemeMode } from "@/hooks/use-theme";
@@ -76,6 +77,7 @@ export function Providers({ children }: ProvidersProps) {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <AuthSessionBridge />
       <ThemeContext.Provider value={themeValue}>{children}</ThemeContext.Provider>
       <ToastContainer />
       <BackToTop />

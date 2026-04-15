@@ -16,7 +16,7 @@ interface SupabaseProduct {
   old_price: number | null;
   discount_percent: number | null;
   category_id: string | null;
-  category_path: string[];
+  category_path: string[] | null;
   deal_type: string;
   city: string | null;
   description: string | null;
@@ -52,6 +52,7 @@ function toProductDeal(p: SupabaseProduct): ProductDeal {
     dealType: (p.deal_type as "online" | "local") || "online",
     city: p.city ?? undefined,
     categoryPath: p.category_path || [],
+    categoryId: p.category_id ?? undefined,
     description: p.description ?? undefined,
     sourceUrl: p.source_url ?? undefined,
     postedBy: {

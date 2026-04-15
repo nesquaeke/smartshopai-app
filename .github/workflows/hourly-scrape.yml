@@ -1,0 +1,68 @@
+name: Hourly scrape (24h slot coverage)
+
+# Runs every UTC hour; each run processes a subset of categories (SCRAPE_TIME_SLOTS).
+# Over 24 hours all categories are covered. Tune limits via env below.
+# Cron is UTC — adjust SCRAPE_SLOT manually in workflow_dispatch if you need a fixed test slot.
+
+on:
+  schedule:
+    - cron: "0 * * * *"
+  workflow_dispatch:
+    inputs:
+      run_all_categories:
+        description: "Set to 1 to scrape all categories in one run (long; may exceed timeout)"
+        required: false
+        default: "0"
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    # Stay under the next hourly run; push limits in env for max rows per slot.
+    timeout-minutes: 55
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        working-directory: scraper
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Install Scrapling browsers
+        working-directory: scraper
+        run: scrapling install
+
+      - name: Run Ceneo scraper
+        working-directory: scraper
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          SCRAPE_TIME_SLOTS: "24"
+          SCRAPE_RUN_ALL: ${{ github.event.inputs.run_all_categories == '1' && '1' || '0' }}
+          CENEO_MAX_ITEMS: "520"
+          CENEO_MAX_PAGES: "42"
+          CENEO_OFFER_PRODUCTS: "65"
+          CENEO_MAX_OFFERS_PER_PRODUCT: "180"
+        run: python ceneo_scraper.py
+
+      - name: Run Allegro scraper
+        working-directory: scraper
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          SCRAPE_TIME_SLOTS: "24"
+          SCRAPE_RUN_ALL: ${{ github.event.inputs.run_all_categories == '1' && '1' || '0' }}
+          ALLEGRO_MAX_PAGES: "18"
+          ALLEGRO_MAX_ITEMS: "1100"
+          ALLEGRO_MAX_ITEMS_PER_PAGE: "90"
+          ALLEGRO_PAGE_SLEEP: "1"
+        run: python allegro_scraper.py
+        continue-on-error: true
+
+      - name: Summary
+        run: echo "Hourly scrape finished at $(date -u)"

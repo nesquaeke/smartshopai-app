@@ -9,18 +9,20 @@ import { ProductCard } from "@/components/deals/product-card";
 import { useFilteredDeals } from "@/hooks/use-filtered-deals";
 import { t } from "@/lib/i18n";
 import { getCardSize } from "@/lib/ranking";
+import { useSupabaseCategories } from "@/hooks/use-supabase-categories";
 import { useFiltersStore } from "@/store/filters-store";
 import { useUiStore } from "@/store/ui-store";
 
 export function HomeFeed() {
   const rankedDeals = useFilteredDeals();
-  const selectedCategory = useFiltersStore((state) => state.selectedCategory);
+  const selectedCategoryId = useFiltersStore((state) => state.selectedCategoryId);
   const dealType = useFiltersStore((state) => state.dealType);
   const city = useFiltersStore((state) => state.city);
   const locale = useUiStore((state) => state.locale);
   const sortMode = useFiltersStore((state) => state.sortMode);
+  const { getDisplayName } = useSupabaseCategories();
   const setDealType = useFiltersStore((state) => state.setDealType);
-  const setSelectedCategory = useFiltersStore((state) => state.setSelectedCategory);
+  const setSelectedCategoryId = useFiltersStore((state) => state.setSelectedCategoryId);
   const setCity = useFiltersStore((state) => state.setCity);
   const setSortMode = useFiltersStore((state) => state.setSortMode);
   const [visibleCount, setVisibleCount] = useState(4);
@@ -29,7 +31,7 @@ export function HomeFeed() {
 
   useEffect(() => {
     setVisibleCount(4);
-  }, [selectedCategory, dealType, city, sortMode]);
+  }, [selectedCategoryId, dealType, city, sortMode]);
 
   useEffect(() => {
     const node = sentinelRef.current;
@@ -101,10 +103,12 @@ export function HomeFeed() {
           ))}
         </div>
         <Input value={city} onChange={(event) => setCity(event.target.value)} placeholder={t(locale, "filterByCity")} className="h-9 w-44 text-xs" />
-        {selectedCategory ? (
+        {selectedCategoryId ? (
           <>
-            <Badge className="h-8 px-3 text-xs">{t(locale, "selectedCategory")}: {selectedCategory}</Badge>
-            <Button size="sm" variant="ghost" onClick={() => setSelectedCategory(null)}>
+            <Badge className="h-8 px-3 text-xs">
+              {t(locale, "selectedCategory")}: {getDisplayName(selectedCategoryId, locale)}
+            </Badge>
+            <Button size="sm" variant="ghost" onClick={() => setSelectedCategoryId(null)}>
               {t(locale, "clearCategory")}
             </Button>
           </>
@@ -112,7 +116,7 @@ export function HomeFeed() {
       </div>
 
       <div aria-live="polite" className="text-xs text-white/65">
-        {selectedCategory ? `${t(locale, "category")}: ${selectedCategory}` : ""}
+        {selectedCategoryId ? `${t(locale, "category")}: ${getDisplayName(selectedCategoryId, locale)}` : ""}
       </div>
 
       <motion.div layout className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">

@@ -19,6 +19,8 @@ from datetime import datetime, timezone
 from scrapling.fetchers import StealthyFetcher
 from supabase import create_client
 
+from scrape_slot import categories_for_this_run, env_int, time_slots_count, current_slot_index
+
 SUPABASE_URL = os.getenv("SUPABASE_URL", "")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY", "")
 
@@ -26,9 +28,15 @@ if not SUPABASE_URL or not SUPABASE_KEY:
     raise SystemExit("Set SUPABASE_URL and SUPABASE_KEY environment variables")
 sb = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-ITEMS_PER_CATEGORY = 60
-PAGES_PER_CATEGORY = 3
-OFFERS_PER_PRODUCT = 8
+
+def ceneo_limits() -> dict:
+    """Tune via env for larger runs (e.g. GitHub hourly job)."""
+    return {
+        "items": env_int("CENEO_MAX_ITEMS", 140, minimum=5, maximum=10000),
+        "pages": env_int("CENEO_MAX_PAGES", 10, minimum=1, maximum=600),
+        "offers_per_product": env_int("CENEO_MAX_OFFERS_PER_PRODUCT", 45, minimum=1, maximum=500),
+        "offer_products": env_int("CENEO_OFFER_PRODUCTS", 18, minimum=0, maximum=500),
+    }
 
 CENEO_CATEGORIES = [
     # Electronics
@@ -176,10 +184,13 @@ def scrape_category_page(url: str) -> tuple[list, bool]:
 
 def scrape_category_listing(cat_info: dict) -> list[dict]:
     """Scrape multiple pages of a category."""
+    lim = ceneo_limits()
+    max_items = lim["items"]
+    max_pages = lim["pages"]
     base_url = cat_info["url"]
     all_items = []
 
-    for page_num in range(1, PAGES_PER_CATEGORY + 1):
+    for page_num in range(1, max_pages + 1):
         url = base_url if page_num == 1 else f"{base_url};0020-30-0-0-0-0-0-0-0.htm?p={page_num}"
         print(f"    Page {page_num}: {url}")
 
@@ -187,13 +198,13 @@ def scrape_category_listing(cat_info: dict) -> list[dict]:
         all_items.extend(items)
         print(f"      Got {len(items)} items (total: {len(all_items)})")
 
-        if not has_next or len(all_items) >= ITEMS_PER_CATEGORY:
+        if not has_next or len(all_items) >= max_items:
             break
         time.sleep(1.5)
 
     products = []
     seen_slugs = set()
-    for item in all_items[:ITEMS_PER_CATEGORY]:
+    for item in all_items[:max_items]:
         slug = make_slug(item["title"])
         if slug in seen_slugs:
             continue
@@ -211,9 +222,9 @@ def scrape_category_listing(cat_info: dict) -> list[dict]:
             "deal_type": "online",
             "source_url": item["product_url"],
             "source": "ceneo",
-            "upvotes": max(1, item["num_offers"] * 2),
+            "upvotes": 0,
             "downvotes": 0,
-            "engagement": max(1, item["num_offers"]),
+            "engagement": 0,
             "scraped_at": datetime.now(timezone.utc).isoformat(),
         })
 
@@ -249,7 +260,8 @@ def scrape_product_offers(product_url: str) -> list[dict]:
         # Fallback: look for offer rows in any table-like structure
         rows = page.css("li.product-offers__list__item") or page.css("ul.product-offers__list li") or []
 
-    for row in rows[:OFFERS_PER_PRODUCT]:
+    max_offers = ceneo_limits()["offers_per_product"]
+    for row in rows[:max_offers]:
         try:
             # Store name: try multiple strategies
             store_name = ""
@@ -335,7 +347,6 @@ def save_products(products: list[dict]) -> list[dict]:
                     "current_price": p["current_price"],
                     "image_url": p["image_url"],
                     "scraped_at": p["scraped_at"],
-                    "engagement": p.get("engagement", 0),
                 }).eq("slug", p["slug"]).execute()
                 saved.append({**p, "id": existing.data[0]["id"]})
             else:
@@ -368,18 +379,25 @@ def save_price_history(product_id: str, price: float, store: str = "Ceneo"):
         pass
 
 def run():
+    lim = ceneo_limits()
+    cats = categories_for_this_run(CENEO_CATEGORIES)
+    slots = time_slots_count()
+    slot = current_slot_index()
     print("=" * 60)
-    print(f"Ceneo.pl MEGA Scraper")
-    print(f"Categories: {len(CENEO_CATEGORIES)}")
-    print(f"Target: ~{len(CENEO_CATEGORIES) * ITEMS_PER_CATEGORY} products")
+    print("Ceneo.pl MEGA Scraper")
+    print(f"Categories this run: {len(cats)} / {len(CENEO_CATEGORIES)} (slot {slot}/{slots}, UTC)")
+    print(
+        f"Limits: max_items={lim['items']}, max_pages={lim['pages']}, "
+        f"offer_products={lim['offer_products']}, max_offers/product={lim['offers_per_product']}"
+    )
     print(f"Started: {datetime.now(timezone.utc).isoformat()}")
     print("=" * 60)
 
     total_products = 0
     total_offers = 0
 
-    for i, cat in enumerate(CENEO_CATEGORIES):
-        print(f"\n[{i+1}/{len(CENEO_CATEGORIES)}] {' > '.join(cat['path'])}")
+    for i, cat in enumerate(cats):
+        print(f"\n[{i+1}/{len(cats)}] {' > '.join(cat['path'])}")
         products = scrape_category_listing(cat)
         print(f"  Parsed {len(products)} unique products")
 
@@ -387,9 +405,9 @@ def run():
         total_products += len(saved)
         print(f"  Saved {len(saved)} to DB")
 
-        # Scrape offers for top products (those with most shop listings)
-        offer_candidates = sorted(saved, key=lambda x: x.get("engagement", 0), reverse=True)
-        for sp in offer_candidates[:10]:
+        n_offer = lim["offer_products"]
+        offer_candidates = saved[:n_offer] if n_offer else []
+        for sp in offer_candidates:
             source_url = sp.get("source_url", "")
             offers = scrape_product_offers(source_url)
             if offers:

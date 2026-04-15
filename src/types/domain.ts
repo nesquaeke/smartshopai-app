@@ -4,6 +4,8 @@ export type VoteDirection = "up" | "down" | null;
 export interface CategoryNode {
   id: string;
   name: string;
+  /** Polish label from Supabase when available */
+  namePl?: string | null;
   slug: string;
   icon: string;
   trending?: boolean;
@@ -27,6 +29,8 @@ export interface ProductDeal {
   dealType: DealType;
   city?: string;
   categoryPath: string[];
+  /** Leaf category id from Supabase (matches categories.id) */
+  categoryId?: string | null;
   description?: string;
   sourceUrl?: string;
   postedBy: {

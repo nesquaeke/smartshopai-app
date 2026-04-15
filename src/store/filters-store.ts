@@ -4,12 +4,13 @@ import { create } from "zustand";
 
 interface FiltersStore {
   query: string;
-  selectedCategory: string | null;
+  /** Selected category id (matches products.category_id + subtree) */
+  selectedCategoryId: string | null;
   dealType: "all" | "online" | "local";
   city: string;
   sortMode: "trending" | "newest" | "discount";
   setQuery: (value: string) => void;
-  setSelectedCategory: (value: string | null) => void;
+  setSelectedCategoryId: (value: string | null) => void;
   setDealType: (value: "all" | "online" | "local") => void;
   setCity: (value: string) => void;
   setSortMode: (mode: "trending" | "newest" | "discount") => void;
@@ -18,14 +19,15 @@ interface FiltersStore {
 
 export const useFiltersStore = create<FiltersStore>((set) => ({
   query: "",
-  selectedCategory: null,
+  selectedCategoryId: null,
   dealType: "all",
   city: "",
   sortMode: "trending",
   setQuery: (value) => set({ query: value }),
-  setSelectedCategory: (value) => set({ selectedCategory: value }),
+  setSelectedCategoryId: (value) => set({ selectedCategoryId: value }),
   setDealType: (value) => set({ dealType: value }),
   setCity: (value) => set({ city: value }),
   setSortMode: (mode) => set({ sortMode: mode }),
-  resetFilters: () => set({ query: "", selectedCategory: null, dealType: "all", city: "", sortMode: "trending" })
+  resetFilters: () =>
+    set({ query: "", selectedCategoryId: null, dealType: "all", city: "", sortMode: "trending" }),
 }));

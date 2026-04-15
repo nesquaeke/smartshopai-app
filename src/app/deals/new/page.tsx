@@ -46,13 +46,14 @@ export default function NewDealPage() {
         form.oldPrice && Number(form.oldPrice) > Number(form.price)
           ? Math.round(((Number(form.oldPrice) - Number(form.price)) / Number(form.oldPrice)) * 100)
           : undefined,
-      upvotes: 1,
+      upvotes: 0,
       downvotes: 0,
-      engagement: 1,
+      engagement: 0,
       postedAt: new Date().toISOString(),
       dealType: form.dealType as "online" | "local",
       city: form.dealType === "local" ? form.city : undefined,
       categoryPath: form.category.split(">").map((item) => item.trim()),
+      categoryId: undefined,
       description: form.description || undefined,
       postedBy: {
         username: "you",

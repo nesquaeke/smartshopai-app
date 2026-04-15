@@ -1,13 +1,15 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { CheckCircle2, Info, AlertTriangle, X } from "lucide-react";
+import { AlertCircle, AlertTriangle, CheckCircle2, Info, X } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { useToastStore } from "@/store/toast-store";
 
 const icons = {
   success: CheckCircle2,
   info: Info,
-  warning: AlertTriangle
+  warning: AlertTriangle,
+  error: AlertCircle,
 };
 
 export function ToastContainer() {
@@ -18,7 +20,16 @@ export function ToastContainer() {
     <div className="fixed bottom-4 right-4 z-[90] flex flex-col gap-2">
       <AnimatePresence>
         {toasts.map((toast) => {
-          const Icon = icons[toast.type ?? "success"];
+          const type = toast.type ?? "success";
+          const Icon = icons[type] ?? CheckCircle2;
+          const iconClass =
+            type === "error"
+              ? "text-rose-400"
+              : type === "warning"
+                ? "text-amber-400"
+                : type === "info"
+                  ? "text-sky-400"
+                  : "text-emerald-400";
           return (
             <motion.div
               key={toast.id}
@@ -27,7 +38,7 @@ export function ToastContainer() {
               exit={{ opacity: 0, y: 10, scale: 0.95 }}
               className="flex items-center gap-2 rounded-2xl border border-white/15 bg-black/80 px-4 py-3 text-sm text-white shadow-soft backdrop-blur-xl"
             >
-              <Icon className="h-4 w-4 shrink-0 text-emerald-400" />
+              <Icon className={cn("h-4 w-4 shrink-0", iconClass)} />
               <span>{toast.message}</span>
               <button type="button" onClick={() => removeToast(toast.id)} className="ml-2 text-white/50 hover:text-white">
                 <X className="h-3.5 w-3.5" />

@@ -78,7 +78,7 @@ export function useSupabaseProducts() {
           .from("products")
           .select("*")
           .order("created_at", { ascending: false })
-          .limit(200);
+          .limit(2000);
 
         if (fetchError) throw fetchError;
         if (cancelled) return;

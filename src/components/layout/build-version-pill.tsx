@@ -1,6 +1,6 @@
 /** Build-time env from `next.config.ts` (Vercel/GitHub SHA when available). */
 export function BuildVersionPill() {
-  const version = process.env.NEXT_PUBLIC_APP_VERSION ?? "v0.1 beta";
+  const version = process.env.NEXT_PUBLIC_APP_VERSION ?? "v0.2 beta";
   const buildId = process.env.NEXT_PUBLIC_BUILD_ID?.trim() ?? "";
 
   return (

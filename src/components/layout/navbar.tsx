@@ -57,14 +57,21 @@ export function Navbar() {
   const logout = useUserStore((state) => state.logout);
   const savedDealIds = useUserStore((state) => state.savedDealIds);
   const deals = useDealsStore((state) => state.deals);
-  const suggestions = query && query.length >= 2
+  const qLower = query.trim().toLowerCase();
+  const suggestions = query.trim().length >= 2
     ? deals
-        .filter((d) =>
-          d.title.toLowerCase().includes(query.toLowerCase()) ||
-          d.storeName.toLowerCase().includes(query.toLowerCase()) ||
-          d.categoryPath.some((c) => c.toLowerCase().includes(query.toLowerCase()))
-        )
-        .slice(0, 5)
+        .filter((d) => {
+          const desc = (d.description ?? "").toLowerCase();
+          const slug = d.slug.toLowerCase();
+          return (
+            d.title.toLowerCase().includes(qLower) ||
+            d.storeName.toLowerCase().includes(qLower) ||
+            slug.includes(qLower) ||
+            desc.includes(qLower) ||
+            d.categoryPath.some((c) => c.toLowerCase().includes(qLower))
+          );
+        })
+        .slice(0, 8)
     : [];
 
   return (
@@ -86,18 +93,20 @@ export function Navbar() {
               </Button>
             </Link>
 
-            <label htmlFor="search-input" className="group relative w-full min-w-0 xl:flex-1">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/45 transition group-focus-within:text-white/70" />
+            <label htmlFor="search-input" className="group relative z-30 w-full min-w-0 xl:flex-1">
+              <Search className="pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-white/55 transition group-focus-within:text-white/85" />
               <Input
                 id="search-input"
-                type="text"
+                type="search"
+                autoComplete="off"
+                spellCheck={false}
                 placeholder={t(locale, "searchPlaceholder")}
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
-                className="pl-10 pr-4"
+                className="relative z-10 border-white/25 bg-black/35 pl-10 pr-4 text-white placeholder:text-white/65 focus:border-white/40 focus:bg-black/45"
               />
               {suggestions.length ? (
-                <div className="absolute left-0 right-0 top-[calc(100%+0.35rem)] z-20 rounded-2xl border border-white/15 bg-black/60 p-2 backdrop-blur-xl">
+                <div className="absolute left-0 right-0 top-[calc(100%+0.35rem)] z-40 rounded-2xl border border-white/15 bg-black/85 p-2 shadow-xl backdrop-blur-xl">
                   {suggestions.map((deal) => (
                     <Link
                       key={deal.id}

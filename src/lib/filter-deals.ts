@@ -13,16 +13,22 @@ export function filterDeals(deals: ProductDeal[], params: FilterParams) {
   const normalizedQuery = params.query.trim().toLowerCase();
 
   return deals.filter((deal) => {
+    const desc = (deal.description ?? "").toLowerCase();
+    const slug = deal.slug.toLowerCase();
     const matchesQuery =
       !normalizedQuery ||
       deal.title.toLowerCase().includes(normalizedQuery) ||
       deal.storeName.toLowerCase().includes(normalizedQuery) ||
+      slug.includes(normalizedQuery) ||
+      desc.includes(normalizedQuery) ||
       deal.categoryPath.some((item) => item.toLowerCase().includes(normalizedQuery));
 
+    const subtree = params.categorySubtreeIds;
     const matchesCategory =
       !params.selectedCategoryId ||
-      !params.categorySubtreeIds ||
-      (Boolean(deal.categoryId) && params.categorySubtreeIds.has(deal.categoryId as string));
+      !subtree ||
+      subtree.size === 0 ||
+      (Boolean(deal.categoryId) && subtree.has(deal.categoryId as string));
 
     const matchesDealType = params.dealType === "all" || deal.dealType === params.dealType;
     const matchesCity = !params.city.trim() || (deal.city ?? "").toLowerCase().includes(params.city.toLowerCase());

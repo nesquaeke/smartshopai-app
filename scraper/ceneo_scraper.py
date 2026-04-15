@@ -19,6 +19,7 @@ from datetime import datetime, timezone
 from scrapling.fetchers import StealthyFetcher
 from supabase import create_client
 
+from ceneo_category_urls import CENEO_EXTRA_CATEGORIES
 from scrape_slot import categories_for_this_run, env_int, time_slots_count, current_slot_index
 
 SUPABASE_URL = os.getenv("SUPABASE_URL", "")
@@ -89,7 +90,13 @@ CENEO_CATEGORIES = [
     {"url": "https://www.ceneo.pl/Cinieniomierze", "category_id": "health", "path": ["Health"]},
     # Automotive
     {"url": "https://www.ceneo.pl/Opony_letnie", "category_id": "automotive", "path": ["Automotive"]},
-]
+] + CENEO_EXTRA_CATEGORIES
+
+
+def _ceneo_product_blurb(title: str, path: list[str]) -> str:
+    tail = " › ".join(path[-2:]) if len(path) >= 2 else (path[0] if path else "Ceneo")
+    text = f"{title[:160]} — {tail}. Porównanie cen na Ceneo.pl."
+    return text[:900]
 
 def make_slug(title: str) -> str:
     slug = re.sub(r"[^a-z0-9]+", "-", title.lower().strip())
@@ -215,7 +222,8 @@ def scrape_category_listing(cat_info: dict) -> list[dict]:
             "slug": slug,
             "image_url": item["img_url"],
             "store_name": "Ceneo",
-            "store_logos": ["CE"],
+            "store_logos": ["Ceneo"],
+            "description": _ceneo_product_blurb(item["title"], cat_info["path"]),
             "current_price": item["price"],
             "category_id": cat_info["category_id"],
             "category_path": cat_info["path"],
@@ -347,6 +355,7 @@ def save_products(products: list[dict]) -> list[dict]:
                     "current_price": p["current_price"],
                     "image_url": p["image_url"],
                     "scraped_at": p["scraped_at"],
+                    "description": p.get("description"),
                 }).eq("slug", p["slug"]).execute()
                 saved.append({**p, "id": existing.data[0]["id"]})
             else:

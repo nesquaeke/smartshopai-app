@@ -7,7 +7,7 @@ const buildId =
 
 const nextConfig: NextConfig = {
   env: {
-    NEXT_PUBLIC_APP_VERSION: "v0.1 beta",
+    NEXT_PUBLIC_APP_VERSION: "v0.2 beta",
     NEXT_PUBLIC_BUILD_ID: buildId
   },
   images: {

@@ -1,9 +1,10 @@
 "use client";
 
 import { motion, useReducedMotion } from "framer-motion";
-import { ArrowBigDown, ArrowBigUp, Bookmark, MapPin, MessageCircle, Store } from "lucide-react";
+import { ArrowBigDown, ArrowBigUp, Bookmark, CalendarDays, MapPin, MessageCircle, Store } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -25,11 +26,39 @@ interface ProductCardProps {
 const cardClasses: Record<CardSize, string> = {
   lg: "xl:col-span-2 xl:row-span-2 min-h-[27rem]",
   md: "md:col-span-2 xl:col-span-1 min-h-[21rem]",
-  sm: "min-h-[20rem]",
+  sm: "min-h-[22rem]",
 };
+
+function formatListedAt(iso: string, locale: "tr" | "en") {
+  try {
+    const d = new Date(iso);
+    return d.toLocaleDateString(locale === "tr" ? "tr-TR" : "en-GB", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  } catch {
+    return "—";
+  }
+}
+
+function marketplaceTitle(code: string, locale: "tr" | "en"): string {
+  const c = code.trim().toUpperCase();
+  if (c === "CE" || c === "CENEO") return t(locale, "marketplaceCe");
+  if (c === "AL" || c === "ALLEGRO") return t(locale, "marketplaceAl");
+  return code;
+}
+
+function marketplaceShortLabel(code: string): string {
+  const c = code.trim().toUpperCase();
+  if (c === "CE" || c === "CENEO") return "Ceneo";
+  if (c === "AL" || c === "ALLEGRO") return "Allegro";
+  return code;
+}
 
 export function ProductCard({ deal, cardSize = "sm" }: ProductCardProps) {
   const shouldReduceMotion = useReducedMotion();
+  const [scorePulse, setScorePulse] = useState<"up" | "down" | null>(null);
   const { vote: supabaseVote } = useSupabaseVotes();
   const locale = useUiStore((state) => state.locale);
   const savedDealIds = useUserStore((state) => state.savedDealIds);
@@ -44,6 +73,11 @@ export function ProductCard({ deal, cardSize = "sm" }: ProductCardProps) {
   const formatPrice = (value: number) =>
     new Intl.NumberFormat("pl-PL").format(value);
 
+  const pulseScore = (direction: "up" | "down") => {
+    setScorePulse(direction);
+    window.setTimeout(() => setScorePulse(null), 900);
+  };
+
   const handleVote = async (direction: "up" | "down") => {
     const result = await supabaseVote(deal.id, direction);
     if (result === "error") {
@@ -55,6 +89,7 @@ export function ProductCard({ deal, cardSize = "sm" }: ProductCardProps) {
       );
       return;
     }
+    pulseScore(direction);
     trackDealInteraction(deal, "vote");
     if (direction === "up" && result !== "removed") addPoints(1);
   };
@@ -96,10 +131,19 @@ export function ProductCard({ deal, cardSize = "sm" }: ProductCardProps) {
         <div className="space-y-3">
           <div className="space-y-1">
             <h3 className="line-clamp-2 text-[15px] font-semibold leading-snug text-white">{deal.title}</h3>
-            <div className="flex items-center gap-2 text-xs text-white/65">
-              <Store className="h-3.5 w-3.5" />
-              {deal.storeName}
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-white/65">
+              <span className="inline-flex items-center gap-1">
+                <Store className="h-3.5 w-3.5 shrink-0" />
+                <span className="font-medium text-white/80">{deal.storeName}</span>
+              </span>
+              <span className="inline-flex items-center gap-1 text-white/50">
+                <CalendarDays className="h-3.5 w-3.5 shrink-0" />
+                {t(locale, "listedAt")}: {formatListedAt(deal.postedAt, locale)}
+              </span>
             </div>
+            <p className="line-clamp-2 text-[11px] leading-snug text-white/55">
+              {deal.description?.trim() ? deal.description.trim() : t(locale, "noShortDescription")}
+            </p>
           </div>
 
           <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
@@ -111,8 +155,12 @@ export function ProductCard({ deal, cardSize = "sm" }: ProductCardProps) {
             </div>
             <div className="flex flex-wrap gap-1.5 sm:justify-end">
               {deal.storeLogos.map((logo) => (
-                <Badge key={`${deal.id}-${logo}`} className="h-6 min-w-6 justify-center px-1.5 text-[10px]">
-                  {logo}
+                <Badge
+                  key={`${deal.id}-${logo}`}
+                  title={marketplaceTitle(logo, locale)}
+                  className="h-6 max-w-[5.5rem] justify-center truncate px-2 text-[10px] font-medium"
+                >
+                  {marketplaceShortLabel(logo)}
                 </Badge>
               ))}
             </div>
@@ -123,7 +171,10 @@ export function ProductCard({ deal, cardSize = "sm" }: ProductCardProps) {
               size="icon"
               variant="ghost"
               onClick={() => void handleVote("up")}
-              className="h-8 w-8 rounded-xl text-white/70 hover:text-vote-up"
+              className={cn(
+                "h-8 w-8 rounded-xl text-white/70 hover:text-vote-up",
+                scorePulse === "up" && "text-emerald-400 ring-2 ring-emerald-400/60"
+              )}
               aria-label={`Upvote ${deal.title}`}
             >
               <ArrowBigUp className="h-5 w-5" />
@@ -132,7 +183,12 @@ export function ProductCard({ deal, cardSize = "sm" }: ProductCardProps) {
               key={score}
               initial={{ scale: 0.9, opacity: 0.65 }}
               animate={{ scale: 1, opacity: 1 }}
-              className={cn("min-w-12 text-center text-sm font-semibold", score >= 0 ? "text-vote-up" : "text-vote-down")}
+              className={cn(
+                "min-w-12 text-center text-sm font-semibold transition-all duration-300",
+                scorePulse === "up" && "scale-110 text-emerald-400 drop-shadow-[0_0_14px_rgba(52,211,153,0.75)]",
+                scorePulse === "down" && "scale-110 text-red-400 drop-shadow-[0_0_14px_rgba(248,113,113,0.65)]",
+                scorePulse === null && (score >= 0 ? "text-vote-up" : "text-vote-down")
+              )}
             >
               {score > 0 ? `+${score}°` : `${score}°`}
             </motion.span>
@@ -140,7 +196,10 @@ export function ProductCard({ deal, cardSize = "sm" }: ProductCardProps) {
               size="icon"
               variant="ghost"
               onClick={() => void handleVote("down")}
-              className="h-8 w-8 rounded-xl text-white/70 hover:text-vote-down"
+              className={cn(
+                "h-8 w-8 rounded-xl text-white/70 hover:text-vote-down",
+                scorePulse === "down" && "text-red-400 ring-2 ring-red-400/55"
+              )}
               aria-label={`Downvote ${deal.title}`}
             >
               <ArrowBigDown className="h-5 w-5" />

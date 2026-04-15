@@ -44,10 +44,10 @@ jobs:
           SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
           SCRAPE_TIME_SLOTS: "24"
           SCRAPE_RUN_ALL: ${{ github.event.inputs.run_all_categories == '1' && '1' || '0' }}
-          CENEO_MAX_ITEMS: "780"
-          CENEO_MAX_PAGES: "58"
-          CENEO_OFFER_PRODUCTS: "85"
-          CENEO_MAX_OFFERS_PER_PRODUCT: "220"
+          CENEO_MAX_ITEMS: "920"
+          CENEO_MAX_PAGES: "64"
+          CENEO_OFFER_PRODUCTS: "72"
+          CENEO_MAX_OFFERS_PER_PRODUCT: "240"
         run: python ceneo_scraper.py
 
       - name: Run Allegro scraper
@@ -57,9 +57,9 @@ jobs:
           SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
           SCRAPE_TIME_SLOTS: "24"
           SCRAPE_RUN_ALL: ${{ github.event.inputs.run_all_categories == '1' && '1' || '0' }}
-          ALLEGRO_MAX_PAGES: "26"
-          ALLEGRO_MAX_ITEMS: "2000"
-          ALLEGRO_MAX_ITEMS_PER_PAGE: "96"
+          ALLEGRO_MAX_PAGES: "34"
+          ALLEGRO_MAX_ITEMS: "3200"
+          ALLEGRO_MAX_ITEMS_PER_PAGE: "100"
           ALLEGRO_PAGE_SLEEP: "1"
         run: python allegro_scraper.py
         continue-on-error: true

@@ -19,6 +19,7 @@ from datetime import datetime, timezone
 from scrapling.fetchers import StealthyFetcher
 from supabase import create_client
 
+from allegro_category_urls import ALLEGRO_EXTRA_CATEGORIES
 from scrape_slot import categories_for_this_run, env_int, time_slots_count, current_slot_index
 
 SUPABASE_URL = os.getenv("SUPABASE_URL", "")
@@ -54,7 +55,13 @@ ALLEGRO_CATEGORIES = [
     {"url": "https://allegro.pl/kategoria/perfumy-damskie-261320", "category_id": "perfume", "path": ["Beauty", "Perfume"]},
     {"url": "https://allegro.pl/kategoria/buty-sportowe-meskie-139920", "category_id": "sneakers", "path": ["Fashion", "Shoes", "Sneakers"]},
     {"url": "https://allegro.pl/kategoria/tablety-261011", "category_id": "tablets", "path": ["Electronics", "Tablets"]},
-]
+] + ALLEGRO_EXTRA_CATEGORIES
+
+
+def _allegro_product_blurb(title: str, path: list[str]) -> str:
+    tail = " › ".join(path[-2:]) if len(path) >= 2 else (path[0] if path else "Allegro")
+    return (f"{title[:160]} — {tail}. Oferta z Allegro.pl.")[:900]
+
 
 def make_slug(title: str) -> str:
     slug = re.sub(r"[^a-z0-9]+", "-", title.lower().strip())
@@ -116,7 +123,8 @@ def _parse_allegro_listing_nodes(items: list, cat_info: dict, cap: int) -> list[
                 "slug": make_slug(title),
                 "image_url": img_url,
                 "store_name": "Allegro",
-                "store_logos": ["AL"],
+                "store_logos": ["Allegro"],
+                "description": _allegro_product_blurb(title, cat_info["path"]),
                 "current_price": price,
                 "category_id": cat_info["category_id"],
                 "category_path": cat_info["path"],
@@ -193,7 +201,9 @@ def save_products(products: list[dict]):
             if existing.data:
                 sb.table("products").update({
                     "current_price": p["current_price"],
+                    "image_url": p.get("image_url"),
                     "scraped_at": p["scraped_at"],
+                    "description": p.get("description"),
                 }).eq("slug", p["slug"]).execute()
                 saved.append({**p, "id": existing.data[0]["id"]})
             else:

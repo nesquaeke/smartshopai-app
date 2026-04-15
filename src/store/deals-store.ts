@@ -1,7 +1,6 @@
 "use client";
 
 import { create } from "zustand";
-import { products } from "@/data/products";
 import { ProductDeal } from "@/types/domain";
 
 interface DealsStore {
@@ -12,7 +11,7 @@ interface DealsStore {
 }
 
 export const useDealsStore = create<DealsStore>()((set) => ({
-  deals: products,
+  deals: [],
   setDeals: (nextDeals) => set({ deals: nextDeals }),
   addDeal: (deal) =>
     set((state) => ({

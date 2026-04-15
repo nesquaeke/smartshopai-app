@@ -16,7 +16,10 @@ export function AiInsightBox({ deal }: AiInsightBoxProps) {
   const locale = useUiStore((state) => state.locale);
   const discount = deal.discountPercent ?? 0;
   const score = deal.upvotes - deal.downvotes;
-  const confidence = Math.min(98, Math.max(52, Math.round((score + discount * 3 + deal.engagement / 22) / 4)));
+  const hasSignals = discount > 0 || score !== 0 || deal.engagement > 0;
+  const confidence = hasSignals
+    ? Math.min(98, Math.max(52, Math.round((score + discount * 3 + deal.engagement / 22) / 4)))
+    : 0;
   const isGoodPrice = discount >= 15 || score > 90;
   const recommendation = isGoodPrice ? t(locale, "buyNow") : t(locale, "waitForDrop");
   const explanation = isGoodPrice

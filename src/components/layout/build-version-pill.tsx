@@ -5,11 +5,11 @@ export function BuildVersionPill() {
 
   return (
     <div
-      className="pointer-events-none fixed right-3 top-3 z-[60] select-none rounded-full border border-white/15 bg-black/45 px-2.5 py-1 text-[10px] font-medium uppercase tracking-wide text-white/80 shadow-lg backdrop-blur-md dark:bg-black/55 sm:right-4 sm:top-4 sm:px-3 sm:py-1.5 sm:text-[11px]"
+      className="pointer-events-none fixed right-3 top-3 z-[200] select-none rounded-full border border-white/20 bg-[#0a0e1a]/90 px-2.5 py-1 text-[10px] font-medium tracking-wide text-white/90 shadow-lg ring-1 ring-white/10 backdrop-blur-md sm:right-4 sm:top-4 sm:px-3 sm:py-1.5 sm:text-[11px]"
       aria-label={`Sürüm ${version}${buildId ? `, derleme ${buildId}` : ""}`}
     >
-      <span className="text-white/95">{version}</span>
-      {buildId ? <span className="ml-1.5 font-mono text-white/55 normal-case">· {buildId}</span> : null}
+      <span className="text-white">{version}</span>
+      {buildId ? <span className="ml-1.5 font-mono text-[10px] text-white/55 sm:text-[11px]">· {buildId}</span> : null}
     </div>
   );
 }

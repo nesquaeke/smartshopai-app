@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.103.2",
     "@tanstack/react-query": "^5.66.0",
     "clsx": "^2.1.1",
     "framer-motion": "^11.18.2",

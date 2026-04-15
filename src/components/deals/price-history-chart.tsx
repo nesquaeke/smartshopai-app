@@ -4,12 +4,14 @@ import { useMemo, useState } from "react";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Button } from "@/components/ui/button";
 import { priceHistoryByProduct } from "@/data/price-history";
+import { t } from "@/lib/i18n";
+import { useUiStore } from "@/store/ui-store";
 
 const ranges = [
-  { key: "7d", label: "7 Days", size: 7 },
-  { key: "30d", label: "30 Days", size: 30 },
-  { key: "90d", label: "90 Days", size: 90 },
-  { key: "1y", label: "1 Year", size: 365 }
+  { key: "7d", i18nKey: "range7d", size: 7 },
+  { key: "30d", i18nKey: "range30d", size: 30 },
+  { key: "90d", i18nKey: "range90d", size: 90 },
+  { key: "1y", i18nKey: "range1y", size: 365 }
 ] as const;
 
 interface PriceHistoryChartProps {
@@ -18,6 +20,7 @@ interface PriceHistoryChartProps {
 
 export function PriceHistoryChart({ productId }: PriceHistoryChartProps) {
   const [range, setRange] = useState<(typeof ranges)[number]["key"]>("30d");
+  const locale = useUiStore((state) => state.locale);
 
   const filteredData = useMemo(() => {
     const allData = priceHistoryByProduct[productId] ?? [];
@@ -29,7 +32,7 @@ export function PriceHistoryChart({ productId }: PriceHistoryChartProps) {
   return (
     <section className="space-y-3 rounded-3xl border border-white/15 bg-white/10 p-4 backdrop-blur-2xl">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-base font-semibold text-white">Price History</h3>
+        <h3 className="text-base font-semibold text-white">{t(locale, "priceHistory")}</h3>
         <div className="flex flex-wrap gap-2">
           {ranges.map((item) => (
             <Button
@@ -38,7 +41,7 @@ export function PriceHistoryChart({ productId }: PriceHistoryChartProps) {
               variant={range === item.key ? "primary" : "secondary"}
               onClick={() => setRange(item.key)}
             >
-              {item.label}
+              {t(locale, item.i18nKey)}
             </Button>
           ))}
         </div>
@@ -47,7 +50,7 @@ export function PriceHistoryChart({ productId }: PriceHistoryChartProps) {
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={filteredData}>
             <defs>
-              <linearGradient id="priceGradient" x1="0" y1="0" x2="0" y2="1">
+              <linearGradient id={`priceGrad-${productId}`} x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="rgba(99,102,241,0.9)" stopOpacity={0.9} />
                 <stop offset="95%" stopColor="rgba(99,102,241,0.05)" stopOpacity={0.1} />
               </linearGradient>
@@ -62,7 +65,7 @@ export function PriceHistoryChart({ productId }: PriceHistoryChartProps) {
                 borderRadius: 16
               }}
             />
-            <Area dataKey="price" type="monotone" stroke="rgba(129,140,248,1)" fill="url(#priceGradient)" />
+            <Area dataKey="price" type="monotone" stroke="rgba(129,140,248,1)" fill={`url(#priceGrad-${productId})`} />
           </AreaChart>
         </ResponsiveContainer>
       </div>

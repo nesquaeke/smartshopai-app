@@ -2,6 +2,7 @@ import { ProductDeal } from "@/types/domain";
 
 const toHours = (isoDate: string) => {
   const ageMs = Date.now() - new Date(isoDate).getTime();
+  if (Number.isNaN(ageMs)) return 9999;
   return ageMs / (1000 * 60 * 60);
 };
 

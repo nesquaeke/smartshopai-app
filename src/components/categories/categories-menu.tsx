@@ -47,7 +47,15 @@ const iconMap: Record<string, LucideIcon> = {
   Gem
 };
 
-function CategoryItem({ category, level = 0 }: { category: CategoryNode; level?: number }) {
+function CategoryItem({
+  category,
+  level = 0,
+  onCategoryPick
+}: {
+  category: CategoryNode;
+  level?: number;
+  onCategoryPick?: () => void;
+}) {
   const [open, setOpen] = useState(level === 0);
   const Icon = iconMap[category.icon] ?? Sparkles;
   const selectedCategory = useFiltersStore((state) => state.selectedCategory);
@@ -61,6 +69,7 @@ function CategoryItem({ category, level = 0 }: { category: CategoryNode; level?:
         type="button"
         onClick={() => {
           setSelectedCategory(isSelected ? null : category.name);
+          onCategoryPick?.();
           if (hasChildren) setOpen((value) => !value);
         }}
         className={cn(
@@ -71,7 +80,7 @@ function CategoryItem({ category, level = 0 }: { category: CategoryNode; level?:
       >
         <span className="flex items-center gap-2 text-sm text-white/90">
           <Icon className="h-4 w-4 text-white/70 transition group-hover:text-white" />
-          {category.name}
+          <span className="min-w-0 truncate">{category.name}</span>
         </span>
         {hasChildren ? (
           <span className="inline-flex items-center gap-1 text-xs text-white/45">
@@ -83,7 +92,7 @@ function CategoryItem({ category, level = 0 }: { category: CategoryNode; level?:
       {hasChildren && open ? (
         <ul className="mt-2 space-y-2 border-l border-white/10 pl-2">
           {(category.children ?? []).map((child) => (
-            <CategoryItem key={child.id} category={child} level={level + 1} />
+            <CategoryItem key={child.id} category={child} level={level + 1} onCategoryPick={onCategoryPick} />
           ))}
         </ul>
       ) : null}
@@ -91,7 +100,11 @@ function CategoryItem({ category, level = 0 }: { category: CategoryNode; level?:
   );
 }
 
-export function CategoriesMenu() {
+interface CategoriesMenuProps {
+  onCategoryPick?: () => void;
+}
+
+export function CategoriesMenu({ onCategoryPick }: CategoriesMenuProps) {
   const [categoryQuery, setCategoryQuery] = useState("");
   const locale = useUiStore((state) => state.locale);
   const trending = categories.filter((category) => category.trending);
@@ -141,15 +154,24 @@ export function CategoriesMenu() {
           <p className="mb-2 text-xs uppercase tracking-[0.08em] text-white/50">{t(locale, "quickCategories")}</p>
           <div className="flex flex-wrap gap-2">
             {quickAccess.map((name) => (
-              <button key={name} type="button" onClick={() => setSelectedCategory(name)}>
-                <Badge className="hover:bg-white/20">{name}</Badge>
+              <button
+                key={name}
+                type="button"
+                onClick={() => {
+                  setSelectedCategory(name);
+                  onCategoryPick?.();
+                }}
+              >
+                <Badge className={cn("hover:bg-white/20", selectedCategory === name && "border-white/35 bg-white/20 text-white")}>
+                  {name}
+                </Badge>
               </button>
             ))}
           </div>
         </div>
         <ul className="max-h-[24rem] space-y-2 overflow-auto pr-2">
           {filteredCategories.map((category) => (
-            <CategoryItem key={category.id} category={category} />
+            <CategoryItem key={category.id} category={category} onCategoryPick={onCategoryPick} />
           ))}
         </ul>
       </section>
@@ -162,7 +184,10 @@ export function CategoriesMenu() {
               <li key={category.id}>
                 <button
                   type="button"
-                  onClick={() => setSelectedCategory(category.name)}
+                  onClick={() => {
+                    setSelectedCategory(category.name);
+                    onCategoryPick?.();
+                  }}
                   className={cn(
                     "w-full rounded-xl border px-3 py-2 text-left text-sm transition",
                     selectedCategory === category.name
@@ -182,8 +207,14 @@ export function CategoriesMenu() {
           <ul className="flex flex-wrap gap-2">
             {recentlyVisitedCategories.map((name) => (
               <li key={name}>
-                <button type="button" onClick={() => setSelectedCategory(name)}>
-                  <Badge>{name}</Badge>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedCategory(name);
+                    onCategoryPick?.();
+                  }}
+                >
+                  <Badge className={cn(selectedCategory === name && "border-white/35 bg-white/20 text-white")}>{name}</Badge>
                 </button>
               </li>
             ))}

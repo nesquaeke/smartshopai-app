@@ -49,15 +49,24 @@ export const useUserStore = create<UserStore>()(
       rank: "Rookie",
       interactions: {},
       login: ({ name, email }) =>
-        set({
+        set((state) => ({
           isLoggedIn: true,
           profile: {
             name,
             email,
-            city: "Istanbul"
+            city: state.profile.city
           }
+        })),
+      logout: () =>
+        set({
+          isLoggedIn: false,
+          profile: { name: "Smart User", email: "user@smartshopai.app", city: "Istanbul" },
+          savedDealIds: [],
+          alerts: [],
+          points: 80,
+          rank: "Rookie",
+          interactions: {}
         }),
-      logout: () => set({ isLoggedIn: false }),
       updateProfile: ({ name, email, city }) =>
         set({
           profile: {
@@ -97,6 +106,6 @@ export const useUserStore = create<UserStore>()(
           };
         })
     }),
-    { name: "smartshop-user-store" }
+    { name: "smartshop-user-store", version: 1 }
   )
 );

@@ -6,11 +6,14 @@ import { Navbar } from "@/components/layout/navbar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { t } from "@/lib/i18n";
 import { useDealsStore } from "@/store/deals-store";
+import { useUiStore } from "@/store/ui-store";
 import { ProductDeal } from "@/types/domain";
 
 export default function NewDealPage() {
   const addDeal = useDealsStore((state) => state.addDeal);
+  const locale = useUiStore((state) => state.locale);
   const router = useRouter();
   const [form, setForm] = useState({
     title: "",
@@ -26,7 +29,7 @@ export default function NewDealPage() {
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
-    const slug = form.title.toLowerCase().replace(/\s+/g, "-");
+    const slug = form.title.toLowerCase().replace(/\s+/g, "-") + "-" + crypto.randomUUID().slice(0, 6);
 
     const nextDeal: ProductDeal = {
       id: crypto.randomUUID(),
@@ -50,6 +53,7 @@ export default function NewDealPage() {
       dealType: form.dealType as "online" | "local",
       city: form.dealType === "local" ? form.city : undefined,
       categoryPath: form.category.split(">").map((item) => item.trim()),
+      description: form.description || undefined,
       postedBy: {
         username: "you",
         rank: "Fresh Poster",
@@ -67,48 +71,48 @@ export default function NewDealPage() {
       <Navbar />
       <div className="mx-auto w-[min(900px,calc(100%-0.5rem))] pt-4">
         <Card elevated className="p-5">
-          <h1 className="mb-4 text-2xl font-semibold text-white">Post New Deal</h1>
+          <h1 className="mb-4 text-2xl font-semibold text-white">{t(locale, "postNewDeal")}</h1>
           <form className="grid gap-3 md:grid-cols-2" onSubmit={submit}>
             <Input
-              placeholder="Title"
+              placeholder={t(locale, "title")}
               required
               value={form.title}
               onChange={(event) => setForm((prev) => ({ ...prev, title: event.target.value }))}
             />
             <Input
-              placeholder="Store"
+              placeholder={t(locale, "storePlaceholder")}
               required
               value={form.storeName}
               onChange={(event) => setForm((prev) => ({ ...prev, storeName: event.target.value }))}
             />
             <Input
               type="number"
-              placeholder="Price"
+              placeholder={t(locale, "pricePlaceholder")}
               required
               value={form.price}
               onChange={(event) => setForm((prev) => ({ ...prev, price: event.target.value }))}
             />
             <Input
               type="number"
-              placeholder="Old Price (optional)"
+              placeholder={t(locale, "oldPricePlaceholder")}
               value={form.oldPrice}
               onChange={(event) => setForm((prev) => ({ ...prev, oldPrice: event.target.value }))}
             />
             <Input
-              placeholder="Category path (e.g. Electronics > Phones > Samsung)"
+              placeholder={t(locale, "categoryPathPlaceholder")}
               required
               className="md:col-span-2"
               value={form.category}
               onChange={(event) => setForm((prev) => ({ ...prev, category: event.target.value }))}
             />
             <Input
-              placeholder="Product URL or image URL"
+              placeholder={t(locale, "imageUrlPlaceholder")}
               className="md:col-span-2"
               value={form.imageUrl}
               onChange={(event) => setForm((prev) => ({ ...prev, imageUrl: event.target.value }))}
             />
             <textarea
-              placeholder="Description"
+              placeholder={t(locale, "descriptionPlaceholder")}
               className="h-32 rounded-2xl border border-white/15 bg-white/10 p-4 text-sm text-white outline-none placeholder:text-white/55 md:col-span-2"
               value={form.description}
               onChange={(event) => setForm((prev) => ({ ...prev, description: event.target.value }))}
@@ -119,16 +123,16 @@ export default function NewDealPage() {
                 variant={form.dealType === "online" ? "primary" : "secondary"}
                 onClick={() => setForm((prev) => ({ ...prev, dealType: "online" }))}
               >
-                Online Deal
+                {t(locale, "onlineDeal")}
               </Button>
               <Button
                 variant={form.dealType === "local" ? "primary" : "secondary"}
                 onClick={() => setForm((prev) => ({ ...prev, dealType: "local" }))}
               >
-                Local Deal
+                {t(locale, "localDealBtn")}
               </Button>
               <Input
-                placeholder="City (for local)"
+                placeholder={t(locale, "cityForLocal")}
                 disabled={form.dealType !== "local"}
                 value={form.city}
                 onChange={(event) => setForm((prev) => ({ ...prev, city: event.target.value }))}
@@ -137,7 +141,7 @@ export default function NewDealPage() {
 
             <div className="md:col-span-2">
               <Button type="submit" variant="primary">
-                Submit Deal
+                {t(locale, "submitDeal")}
               </Button>
             </div>
           </form>

@@ -10,6 +10,18 @@ const nextConfig: NextConfig = {
       {
         protocol: "https",
         hostname: "picsum.photos"
+      },
+      {
+        protocol: "https",
+        hostname: "image.ceneostatic.pl"
+      },
+      {
+        protocol: "https",
+        hostname: "**.allegro.pl"
+      },
+      {
+        protocol: "https",
+        hostname: "a.allegroimg.com"
       }
     ]
   }

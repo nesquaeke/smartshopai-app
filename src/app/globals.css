@@ -35,14 +35,33 @@
 .dark {
   --surface: 222 28% 12%;
   --surface-elevated: 223 32% 15%;
+}
+
+.dark[data-accent="default"] {
   --accent-from: 220 90% 62%;
   --accent-to: 270 92% 68%;
   --vote-up: 18 98% 62%;
   --vote-down: 210 95% 68%;
 }
 
-* {
-  @apply border-white/10;
+.dark[data-accent="ocean"] {
+  --accent-from: 196 88% 58%;
+  --accent-to: 221 84% 66%;
+  --vote-up: 22 96% 62%;
+  --vote-down: 203 92% 68%;
+}
+
+.dark[data-accent="emerald"] {
+  --accent-from: 160 80% 44%;
+  --accent-to: 186 82% 48%;
+  --vote-up: 20 94% 62%;
+  --vote-down: 193 88% 66%;
+}
+
+*,
+::before,
+::after {
+  border-color: hsl(0 0% 100% / 0.1);
 }
 
 html,

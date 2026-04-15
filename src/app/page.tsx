@@ -1,8 +1,14 @@
+"use client";
+
 import { HomeAds } from "@/components/ads/home-ads";
 import { HomeFeed } from "@/components/feed/home-feed";
+import { Footer } from "@/components/layout/footer";
 import { Navbar } from "@/components/layout/navbar";
+import { useSupabaseProducts } from "@/hooks/use-supabase-products";
 
 export default function Home() {
+  const { loading } = useSupabaseProducts();
+
   return (
     <main className="relative min-h-screen overflow-x-hidden px-2 pb-10 pt-4 sm:px-4">
       <div className="mesh-bg pointer-events-none absolute inset-0 -z-20" />
@@ -11,8 +17,17 @@ export default function Home() {
       <Navbar />
       <div className="mx-auto w-[min(1200px,calc(100%-0.5rem))]">
         <HomeAds />
-        <HomeFeed />
+        {loading ? (
+          <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="h-72 animate-pulse rounded-3xl border border-white/10 bg-white/5" />
+            ))}
+          </div>
+        ) : (
+          <HomeFeed />
+        )}
       </div>
+      <Footer />
     </main>
   );
 }

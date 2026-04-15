@@ -1,0 +1,45 @@
+name: Daily Scrape - Ceneo & Allegro
+
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        working-directory: scraper
+        run: |
+          pip install --upgrade pip
+          pip install "scrapling[all]" supabase requests
+
+      - name: Install Scrapling browsers
+        run: scrapling install
+
+      - name: Run Ceneo scraper
+        working-directory: scraper
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python ceneo_scraper.py
+
+      - name: Run Allegro scraper
+        working-directory: scraper
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python allegro_scraper.py
+        continue-on-error: true
+
+      - name: Summary
+        run: echo "Daily scrape completed at $(date -u)"

@@ -15,8 +15,9 @@ import {
   UserRound
 } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { CategoriesMenu } from "@/components/categories/categories-menu";
+import { MobileNavDrawer } from "@/components/layout/mobile-nav-drawer";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -24,6 +25,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { t } from "@/lib/i18n";
+import { useDealsStore } from "@/store/deals-store";
 import { useFiltersStore } from "@/store/filters-store";
 import { useUiStore } from "@/store/ui-store";
 import { useUserStore } from "@/store/user-store";
@@ -31,6 +33,19 @@ import { useUserStore } from "@/store/user-store";
 export function Navbar() {
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const profileMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isProfileMenuOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(e.target as Node)) {
+        setIsProfileMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isProfileMenuOpen]);
+
   const { query, setQuery } = useFiltersStore();
   const locale = useUiStore((state) => state.locale);
   const setLocale = useUiStore((state) => state.setLocale);
@@ -40,10 +55,16 @@ export function Navbar() {
   const profile = useUserStore((state) => state.profile);
   const points = useUserStore((state) => state.points);
   const logout = useUserStore((state) => state.logout);
-  const suggestions = query
-    ? ["Samsung Galaxy", "Noise Cancelling Headphones", "Air Fryer", "Local Deals Istanbul"].filter((item) =>
-        item.toLowerCase().includes(query.toLowerCase())
-      )
+  const savedDealIds = useUserStore((state) => state.savedDealIds);
+  const deals = useDealsStore((state) => state.deals);
+  const suggestions = query && query.length >= 2
+    ? deals
+        .filter((d) =>
+          d.title.toLowerCase().includes(query.toLowerCase()) ||
+          d.storeName.toLowerCase().includes(query.toLowerCase()) ||
+          d.categoryPath.some((c) => c.toLowerCase().includes(query.toLowerCase()))
+        )
+        .slice(0, 5)
     : [];
 
   return (
@@ -53,8 +74,10 @@ export function Navbar() {
           <div className="flex flex-wrap items-center gap-3 xl:flex-1">
             <div className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-accent-from/80 to-accent-to/80 px-3 py-2 text-white shadow-glass">
               <Sparkles className="h-4 w-4" />
-              <span className="text-sm font-semibold tracking-wide">SmartShopAI</span>
+              <span className="text-sm font-semibold tracking-wide">{t(locale, "brandName")}</span>
             </div>
+
+            <MobileNavDrawer />
 
             <Link href="/" className="hidden sm:inline-flex">
               <Button variant="secondary" className="gap-2">
@@ -63,9 +86,10 @@ export function Navbar() {
               </Button>
             </Link>
 
-            <label className="group relative min-w-[240px] flex-1">
+            <label htmlFor="search-input" className="group relative w-full min-w-0 xl:flex-1">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/45 transition group-focus-within:text-white/70" />
               <Input
+                id="search-input"
                 type="text"
                 placeholder={t(locale, "searchPlaceholder")}
                 value={query}
@@ -74,21 +98,29 @@ export function Navbar() {
               />
               {suggestions.length ? (
                 <div className="absolute left-0 right-0 top-[calc(100%+0.35rem)] z-20 rounded-2xl border border-white/15 bg-black/60 p-2 backdrop-blur-xl">
-                  {suggestions.map((item) => (
-                    <p key={item} className="rounded-lg px-2 py-1 text-xs text-white/80 hover:bg-white/10">
-                      {item}
-                    </p>
+                  {suggestions.map((deal) => (
+                    <Link
+                      key={deal.id}
+                      href={`/deals/${deal.slug}`}
+                      className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs text-white/80 hover:bg-white/10"
+                      onClick={() => setQuery("")}
+                    >
+                      <span className="truncate font-medium">{deal.title}</span>
+                      <span className="ml-auto shrink-0 text-white/50">{deal.storeName}</span>
+                    </Link>
                   ))}
                 </div>
               ) : null}
             </label>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2.5 xl:justify-end xl:gap-3">
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 xl:flex-wrap xl:justify-end xl:gap-3 xl:overflow-visible xl:pb-0">
             <Button
               onClick={() => setIsCategoryOpen((prev) => !prev)}
+              aria-expanded={isCategoryOpen}
+              aria-controls="categories-panel"
               className={cn(
-                "min-w-fit px-4",
+                "min-w-fit shrink-0 px-4",
                 isCategoryOpen
                   ? "border-white/30 bg-white/20"
                   : "border-white/15 bg-white/10 hover:border-white/25 hover:bg-white/15"
@@ -99,10 +131,11 @@ export function Navbar() {
               <ChevronDown className={cn("h-4 w-4 transition", isCategoryOpen && "rotate-180")} />
             </Button>
 
-            <div className="inline-flex h-11 overflow-hidden rounded-2xl border border-white/15 bg-white/10 p-1">
+            <div className="inline-flex h-11 shrink-0 overflow-hidden rounded-2xl border border-white/15 bg-white/10 p-1">
               <button
                 type="button"
                 onClick={() => setLocale("tr")}
+                aria-pressed={locale === "tr"}
                 className={cn(
                   "rounded-xl px-3 text-xs font-medium",
                   locale === "tr" ? "bg-white/20 text-white" : "text-white/70 hover:text-white"
@@ -113,6 +146,7 @@ export function Navbar() {
               <button
                 type="button"
                 onClick={() => setLocale("en")}
+                aria-pressed={locale === "en"}
                 className={cn(
                   "rounded-xl px-3 text-xs font-medium",
                   locale === "en" ? "bg-white/20 text-white" : "text-white/70 hover:text-white"
@@ -122,7 +156,7 @@ export function Navbar() {
               </button>
             </div>
 
-            <div className="inline-flex h-11 items-center gap-1 overflow-hidden rounded-2xl border border-white/15 bg-white/10 p-1">
+            <div className="hidden h-11 items-center gap-1 overflow-hidden rounded-2xl border border-white/15 bg-white/10 p-1 lg:inline-flex">
               <span className="px-2 text-[11px] text-white/60">{t(locale, "theme")}</span>
               <button
                 type="button"
@@ -158,13 +192,15 @@ export function Navbar() {
 
             <ThemeToggle />
 
-            <Button variant="secondary" className="hidden sm:inline-flex">
-              <Bell className="h-4 w-4" />
-              <span>{t(locale, "notifications")}</span>
-            </Button>
+            <Link href="/notifications" className="hidden sm:inline-flex">
+              <Button variant="secondary">
+                <Bell className="h-4 w-4" />
+                <span>{t(locale, "notifications")}</span>
+              </Button>
+            </Link>
 
             {isLoggedIn ? (
-              <div className="relative">
+              <div className="relative" ref={profileMenuRef}>
                 <Button
                   variant="secondary"
                   className="hidden sm:inline-flex"
@@ -199,24 +235,31 @@ export function Navbar() {
               <Link href="/login" className="hidden sm:inline-flex">
                 <Button variant="secondary">
                   <UserRound className="h-4 w-4" />
-                  Login
+                  {t(locale, "login")}
                 </Button>
               </Link>
             )}
             <Link href="/watchlist" className="hidden sm:inline-flex">
-              <Badge className="h-11 rounded-2xl px-3 text-xs">{t(locale, "watchlist")}</Badge>
+              <Badge className="h-11 rounded-2xl px-3 text-xs">
+                {t(locale, "watchlist")}
+                {savedDealIds.length > 0 ? (
+                  <span className="ml-1.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-white/20 px-1 text-[10px]">
+                    {savedDealIds.length}
+                  </span>
+                ) : null}
+              </Badge>
             </Link>
             {isLoggedIn ? (
               <Badge className="hidden h-11 items-center gap-1 rounded-2xl px-3 sm:inline-flex">
                 <Avatar name={profile.name} className="h-6 w-6 border-white/30 text-[10px]" />
                 <Medal className="h-4 w-4" />
-                {points} pts
+                {points} {t(locale, "points")}
               </Badge>
             ) : null}
 
             <Link
               href="/deals/new"
-              className="inline-flex h-11 items-center gap-2 rounded-2xl bg-gradient-to-r from-accent-from to-accent-to px-4 text-sm font-medium text-white shadow-glass transition hover:scale-[1.02] active:scale-[0.99]"
+              className="inline-flex h-11 shrink-0 items-center gap-2 rounded-2xl bg-gradient-to-r from-accent-from to-accent-to px-4 text-sm font-medium text-white shadow-glass transition hover:scale-[1.02] active:scale-[0.99]"
             >
               <Plus className="h-4 w-4" />
               {t(locale, "postDeal")}
@@ -227,13 +270,14 @@ export function Navbar() {
         <AnimatePresence initial={false}>
           {isCategoryOpen ? (
             <motion.div
+              id="categories-panel"
               initial={{ opacity: 0, y: -8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.2, ease: "easeOut" }}
               className="mt-3 rounded-3xl border border-white/15 bg-black/25 p-4 backdrop-blur-2xl"
             >
-              <CategoriesMenu />
+              <CategoriesMenu onCategoryPick={() => setIsCategoryOpen(false)} />
             </motion.div>
           ) : null}
         </AnimatePresence>

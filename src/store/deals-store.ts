@@ -22,7 +22,7 @@ const initialVotes = products.reduce<Record<string, VoteState>>((acc, deal) => {
   return acc;
 }, {});
 
-export const useDealsStore = create<DealsStore>((set, get) => ({
+export const useDealsStore = create<DealsStore>()((set, get) => ({
   deals: products,
   votes: initialVotes,
   setDeals: (nextDeals) => set({ deals: nextDeals }),
@@ -45,6 +45,22 @@ export const useDealsStore = create<DealsStore>((set, get) => ({
         : { direction: "down", scoreDelta: -1 };
 
     set((state) => ({
+      deals: state.deals.map((deal) => {
+        if (deal.id !== dealId) return deal;
+        let upDelta = 0;
+        let downDelta = 0;
+        if (previous.direction === "up") upDelta -= 1;
+        if (previous.direction === "down") downDelta -= 1;
+        if (!isSameVote) {
+          if (direction === "up") upDelta += 1;
+          if (direction === "down") downDelta += 1;
+        }
+        return {
+          ...deal,
+          upvotes: deal.upvotes + upDelta,
+          downvotes: deal.downvotes + downDelta
+        };
+      }),
       votes: {
         ...state.votes,
         [dealId]: nextVote

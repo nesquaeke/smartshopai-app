@@ -8,14 +8,14 @@ export interface DealScrapeJob {
 }
 
 export interface PriceTrackResponse {
-  slug: string;
+  productId: string;
   offers: Array<{ storeName: string; price: number; inStock: boolean }>;
 }
 
-export async function fetchTrackedPrices(slug: string): Promise<PriceTrackResponse> {
-  const offers = storeOffersByProduct[slug] ?? [];
+export async function fetchTrackedPrices(productId: string): Promise<PriceTrackResponse> {
+  const offers = storeOffersByProduct[productId] ?? [];
   return {
-    slug,
+    productId,
     offers: offers.map((offer) => ({
       storeName: offer.storeName,
       price: offer.price,

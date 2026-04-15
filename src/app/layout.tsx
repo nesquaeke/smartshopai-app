@@ -6,8 +6,18 @@ import { Providers } from "@/components/providers";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "SmartShopAI",
-  description: "Community-powered deal discovery and price intelligence platform."
+  title: {
+    default: "SmartShopAI - Deal Discovery & Price Intelligence",
+    template: "%s | SmartShopAI"
+  },
+  description: "Community-powered deal discovery and price comparison platform. Find the best deals, track prices, and share bargains.",
+  keywords: ["deals", "price comparison", "price tracking", "bargains", "community deals", "SmartShopAI"],
+  openGraph: {
+    type: "website",
+    siteName: "SmartShopAI",
+    title: "SmartShopAI - Deal Discovery & Price Intelligence",
+    description: "Community-powered deal discovery and price comparison platform."
+  }
 };
 
 export default function RootLayout({
@@ -16,8 +26,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="tr" suppressHydrationWarning>
       <body className={inter.className}>
+        <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-xl focus:bg-white/20 focus:px-4 focus:py-2 focus:text-white focus:backdrop-blur-xl">
+          Skip to content
+        </a>
         <Providers>{children}</Providers>
       </body>
     </html>

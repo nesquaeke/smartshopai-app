@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { t } from "@/lib/i18n";
+import { useUiStore } from "@/store/ui-store";
 import { useUserStore } from "@/store/user-store";
 
 export default function ProfileSettingsPage() {
@@ -17,6 +19,7 @@ export default function ProfileSettingsPage() {
   const points = useUserStore((state) => state.points);
   const rank = useUserStore((state) => state.rank);
   const updateProfile = useUserStore((state) => state.updateProfile);
+  const locale = useUiStore((state) => state.locale);
 
   const [name, setName] = useState(profile.name);
   const [email, setEmail] = useState(profile.email);
@@ -34,10 +37,10 @@ export default function ProfileSettingsPage() {
       <div className="mx-auto mt-5 w-[min(760px,calc(100%-0.5rem))] space-y-4">
         {!isLoggedIn ? (
           <Card className="p-5 text-sm text-white/80">
-            You need to login first.
+            {t(locale, "profileNeedLogin")}
             <div className="mt-3">
               <Button onClick={() => router.push("/login")} variant="primary">
-                Go to Login
+                {t(locale, "goToLogin")}
               </Button>
             </div>
           </Card>
@@ -52,23 +55,23 @@ export default function ProfileSettingsPage() {
                 </div>
               </div>
               <Badge className="h-10 items-center px-4 text-sm">
-                {points} pts - {rank}
+                {points} {t(locale, "points")} - {rank}
               </Badge>
             </Card>
 
             <Card className="p-5">
-              <h1 className="mb-3 text-xl font-semibold text-white">Profile Settings</h1>
+              <h1 className="mb-3 text-xl font-semibold text-white">{t(locale, "profileOverview")}</h1>
               <form className="space-y-3" onSubmit={onSubmit}>
-                <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="Name" />
+                <Input value={name} onChange={(event) => setName(event.target.value)} placeholder={t(locale, "name")} />
                 <Input
                   type="email"
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
-                  placeholder="Email"
+                  placeholder={t(locale, "email")}
                 />
-                <Input value={city} onChange={(event) => setCity(event.target.value)} placeholder="City" />
+                <Input value={city} onChange={(event) => setCity(event.target.value)} placeholder={t(locale, "city")} />
                 <Button type="submit" variant="primary">
-                  Save Changes
+                  {t(locale, "saveChanges")}
                 </Button>
               </form>
             </Card>

@@ -21,6 +21,6 @@ export const useUiStore = create<UiStore>()(
       setLocale: (locale) => set({ locale }),
       setAccentTheme: (theme) => set({ accentTheme: theme })
     }),
-    { name: "smartshop-ui-store" }
+    { name: "smartshop-ui-store", version: 1 }
   )
 );

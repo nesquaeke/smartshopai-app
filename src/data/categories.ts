@@ -34,7 +34,7 @@ export const categories: CategoryNode[] = [
         icon: "Laptop",
         children: [
           { id: "ultrabooks", name: "Ultrabooks", slug: "ultrabooks", icon: "MonitorSmartphone" },
-          { id: "gaming", name: "Gaming", slug: "gaming", icon: "Gamepad2" }
+          { id: "gaming-laptops", name: "Gaming", slug: "gaming-laptops", icon: "Gamepad2" }
         ]
       }
     ]

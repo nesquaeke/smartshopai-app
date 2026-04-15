@@ -27,6 +27,8 @@ export interface ProductDeal {
   dealType: DealType;
   city?: string;
   categoryPath: string[];
+  description?: string;
+  sourceUrl?: string;
   postedBy: {
     username: string;
     rank: string;
